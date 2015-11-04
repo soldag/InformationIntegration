@@ -1,4 +1,5 @@
 import psycopg2
+import logging
 
 
 class DatabaseWriter:
@@ -9,6 +10,7 @@ class DatabaseWriter:
         self.database_name = database_name
         self.schema = schema
         self.is_quiet = is_quiet
+        self.logger = logging.getLogger("databasewriter")
 
         self.isConnected = False
         self.connection = None
@@ -31,7 +33,7 @@ class DatabaseWriter:
             self.connection.commit()
         except (psycopg2.DataError, psycopg2.IntegrityError) as e:
             self.connection.rollback()
-            print(e.message)
+            self.logger.warning(e.message)
 
     @staticmethod
     def row_to_sql(table_name, row):
@@ -60,6 +62,15 @@ class DatabaseWriter:
         keys = ",".join(map(lambda (x, y): x, filter(lambda (x, y): "primary_key" in y and y["primary_key"], column_definitions)))
 
         return "PRIMARY KEY({})".format(keys)
+
+    def add_foreign_keys(self):
+        for table_name, columns in self.schema.iteritems():
+            foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], column_definitions))
+            for attribute, reference in foreign_keys:
+                try:
+                    self.cursor.execute("ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {}".format(table_name, attribute, reference))
+                except psycopg2.IntegrityError as e:
+                    self.logger.warning(e.message)
 
     def table_exists(self, table_name):
         self.cursor.execute("SELECT COUNT(relname) FROM pg_class WHERE relname = %s", [table_name])

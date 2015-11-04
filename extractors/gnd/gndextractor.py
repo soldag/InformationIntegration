@@ -1,3 +1,5 @@
+import os.path
+import logging
 import argparse
 
 from gndextractor.DatabaseWriter import DatabaseWriter
@@ -6,6 +8,13 @@ from gndextractor.dbschema import db_schema
 
 
 if __name__ == "__main__":
+    # Delete old and create log
+    log_file_name = "gnd.log"
+    if os.path.isfile(log_file_name):
+        os.remove(log_file_name)
+    logging.basicConfig(filename=log_file_name, level=logging.DEBUG)
+
+    # Parse arguments
     parser = argparse.ArgumentParser(description="This program imports GND dumps into a local PostgreSQL instance.")
     parser.add_argument("--tp-dump", "-tp", help="GND dump file containing information about persons.")
     parser.add_argument("--tu-dump", "-tu", help="GND dump file containing information about literary works.")
@@ -36,6 +45,9 @@ if __name__ == "__main__":
     if args.tg_dump:
         with open(args.tg_dump, "rb") as dump_file:
             extractor.process_dump("tg", dump_file)
+
+    # Add foreign keys
+    db_writer.add_foreign_keys()
 
     # Close database connection
     db_writer.disconnect()
