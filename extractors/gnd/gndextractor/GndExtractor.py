@@ -69,7 +69,7 @@ class GndExtractor:
         for table_name, scopes in self.property_mapping[dump_id].iteritems():
             for scope_path, columns in scopes.iteritems():
                 if scope_path == ".":
-                    scope_elements = entity_element
+                    scope_elements = [entity_element]
                 else:
                     scope_elements = entity_element.xpath(scope_path, namespaces=self.namespaces)
                 if scope_elements is not None:
