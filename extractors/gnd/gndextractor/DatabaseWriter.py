@@ -44,13 +44,13 @@ class DatabaseWriter:
     def create_tables(self):
         for table_name, columns in self.schema.iteritems():
             if not self.table_exists(table_name):
-                column_definitions = ",".join(map(lambda (x, y): self.build_column_definition(x, y), columns.items()))
+                column_definitions = ",".join(map(lambda (x, y): self.build_attr_definition(x, y), columns.items()))
                 primary_key_statement = self.build_primary_key_statement(columns.items())
                 self.cursor.execute("CREATE TABLE {} ({},{});".format(table_name, column_definitions, primary_key_statement))
         self.connection.commit()
 
     @staticmethod
-    def build_column_definition(column_name, properties):
+    def build_attr_definition(column_name, properties):
         definition = "{} {}".format(column_name, properties["type"])
         if "null" in properties and not properties["null"]:
             definition += " NOT NULL"

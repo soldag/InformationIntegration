@@ -6,20 +6,12 @@ from propertymapping import property_mapping
 
 
 class GndExtractor:
-    """
-    Dump converter for dumps in xml format. Is responsible for splitting dump
-    into single entities and process them by applying given property mapping.
-    """
     XML_ENTITIES_PATH = "ns:collection/ns:record"
     XML_NAMESPACES = {
         "ns": "http://www.loc.gov/MARC21/slim"
     }
 
     def __init__(self, db_writer, is_quiet=False):
-        """
-        Creates new XmlDumpConverter instance
-        :param is_quiet: If set to True, console output will be suppressed.
-        """
         self.db_writer = db_writer
         self.is_quiet = is_quiet
         self.property_mapping = property_mapping
@@ -27,12 +19,6 @@ class GndExtractor:
         self.entities_path = self.apply_namespaces(self.XML_ENTITIES_PATH)
 
     def apply_namespaces(self, element_path):
-        """
-        Applies namespace map on specified node path.
-        Replaces names of namespaces with corresponding url.
-        :param element_path: Simple path to a xml node.
-        :return: Node path with concrete namespaces.
-        """
         if self.namespaces:
             nodes = []
             for node in element_path.split("/"):
@@ -73,11 +59,6 @@ class GndExtractor:
 
     @staticmethod
     def clean_up_references(element):
-        """
-        Cleans up unneeded references of an given xml element.
-        See http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
-        :param element: Xml element
-        """
         # Clean up unneeded references
         # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
         element.clear()
@@ -85,11 +66,6 @@ class GndExtractor:
             del element.getparent()[0]
 
     def process_entity(self, dump_id, entity_element):
-        """
-        Generator that extracts values from given entity by applying mapping.
-        :param entity_element: Xml element of a single entity.
-        :return: Triples of entity id, property id and external values
-        """
         for table_name, scopes in self.property_mapping[dump_id].iteritems():
             for scope_path, columns in scopes.iteritems():
                 if scope_path == ".":
