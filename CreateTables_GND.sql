@@ -33,10 +33,3 @@ CREATE TABLE places (
         latitude VARCHAR(16),
         longitude VARCHAR(16)
     );
-
-ALTER TABLE persons ADD CONSTRAINT foreignPlaceOfBirth FOREIGN KEY (place_of_birth) REFERENCES places(id);
-ALTER TABLE persons ADD CONSTRAINT foreignPlaceOfDeath FOREIGN KEY (place_of_death) REFERENCES places(id);
-ALTER TABLE person_relations ADD CONSTRAINT foreignPerson1 FOREIGN KEY (person1) REFERENCES persons(id);
-ALTER TABLE person_relations ADD CONSTRAINT foreignPerson2 FOREIGN KEY (person2) REFERENCES persons(id);
-ALTER TABLE work_authors ADD CONSTRAINT foreignWorks FOREIGN KEY (work) REFERENCES works(id);
-ALTER TABLE work_authors ADD CONSTRAINT foreignAuthor FOREIGN KEY (author) REFERENCES persons(id);
