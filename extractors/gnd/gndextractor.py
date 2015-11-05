@@ -24,12 +24,15 @@ if __name__ == "__main__":
     parser.add_argument("--dbname", "-n", help="Name of the database.", required=True)
     parser.add_argument("--dbuser", "-u", help="Username for accessing the database.", required=True)
     parser.add_argument("--dbpwd", "-p", help="Password for accessing the database.", required=True)
+    parser.add_argument("--clean", "-c", help="Delete and overwrite existing information.", action="store_true")
     parser.add_argument("--quiet", "-q", help="suppress output", action="store_true")
     args = parser.parse_args()
 
     # Connect to database
     db_writer = DatabaseWriter(args.dbhost, args.dbport, args.dbname, db_schema, args.quiet)
     db_writer.connect(args.dbuser, args.dbpwd)
+    if args.clean:
+        db_writer.drop_tables()
     db_writer.create_tables()
 
     # Run extraction

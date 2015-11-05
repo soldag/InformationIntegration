@@ -86,7 +86,7 @@ class GndExtractor:
             else:
                 affected_element = scope_element
             value = self.apply_xpath(affected_element, properties["xpath"])
-            if value or self.can_column_be_null(table_name, column):
+            if value:
                 row[column] = value
             else:
                 return
@@ -105,10 +105,3 @@ class GndExtractor:
             return unicode(result, encoding="utf-8", errors='ignore')
         elif isinstance(result, unicode):
             return result
-
-    def can_column_be_null(self, table_name, column_name):
-        db_schema = self.db_writer.get_schema()
-        if "null" in db_schema[table_name][column_name]:
-            return db_schema[table_name][column_name]["null"]
-
-        return True

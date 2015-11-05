@@ -49,6 +49,11 @@ class DatabaseWriter:
                 self.cursor.execute("CREATE TABLE {} ({},{});".format(table_name, column_definitions, primary_key_statement))
         self.connection.commit()
 
+    def drop_tables(self):
+        for table_name in self.schema.keys():
+            self.cursor.execute("DROP TABLE IF EXISTS " + table_name)
+        self.connection.commit()
+
     @staticmethod
     def build_attr_definition(column_name, properties):
         definition = "{} {}".format(column_name, properties["type"])
@@ -65,7 +70,7 @@ class DatabaseWriter:
 
     def add_foreign_keys(self):
         for table_name, columns in self.schema.iteritems():
-            foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], column_definitions))
+            foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], columns.items()))
             for attribute, reference in foreign_keys:
                 try:
                     self.cursor.execute("ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {}".format(table_name, attribute, reference))
@@ -77,9 +82,6 @@ class DatabaseWriter:
         count = self.cursor.fetchone()
 
         return count[0] == 1
-
-    def get_schema(self):
-        return self.schema
 
     def disconnect(self):
         self.isConnected = False
