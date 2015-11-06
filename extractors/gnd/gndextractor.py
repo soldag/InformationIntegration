@@ -38,18 +38,25 @@ if __name__ == "__main__":
     # Run extraction
     extractor = GndExtractor(db_writer, args.quiet)
     if args.tp_dump:
+        if not args.quiet:
+            print("Extracting from " + os.path.basename(args.tp_dump))
         with open(args.tp_dump, "rb") as dump_file:
             extractor.process_dump("tp", dump_file)
 
     if args.tu_dump:
+        if not args.quiet:
+            print("Extracting from " + os.path.basename(args.tu_dump))
         with open(args.tu_dump, "rb") as dump_file:
             extractor.process_dump("tu", dump_file)
 
     if args.tg_dump:
+        if not args.quiet:
+            print("Extracting from " + os.path.basename(args.tg_dump))
         with open(args.tg_dump, "rb") as dump_file:
             extractor.process_dump("tg", dump_file)
 
     # Add foreign keys
+    db_writer.remove_violating_rows()
     db_writer.add_foreign_keys()
 
     # Close database connection

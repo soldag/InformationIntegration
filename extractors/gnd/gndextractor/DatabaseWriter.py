@@ -50,8 +50,8 @@ class DatabaseWriter:
         self.connection.commit()
 
     def drop_tables(self):
-        for table_name in self.schema.keys():
-            self.cursor.execute("DROP TABLE IF EXISTS " + table_name)
+        table_names = ",".join(self.schema.keys())
+        self.cursor.execute("DROP TABLE IF EXISTS {} CASCADE".format(table_names))
         self.connection.commit()
 
     @staticmethod
@@ -68,14 +68,38 @@ class DatabaseWriter:
 
         return "PRIMARY KEY({})".format(keys)
 
+    def remove_violating_rows(self):
+        if not self.is_quiet:
+            print("Deleting rows violating foreign key constraints...")
+
+        i = 0
+        for table_name, columns in self.schema.iteritems():
+            foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], columns.items()))
+            for attribute, reference in foreign_keys:
+                bracket_index = reference.index("(")
+                referenced_table = reference[:bracket_index]
+                referenced_attribute = reference[bracket_index+1:-1]
+                self.cursor.execute("SELECT {} FROM {}".format(attribute, table_name))
+                for row in self.cursor.fetchall():
+                    if row[0] is not None:
+                        self.cursor.execute("SELECT {0} FROM {1} WHERE {0}='{2}'".format(referenced_attribute, referenced_table, row[0]))
+                        if self.cursor.fetchone() is None:
+                            self.cursor.execute("DELETE FROM {} WHERE {}='{}'".format(table_name, attribute, row[0]))
+                            self.connection.commit()
+
     def add_foreign_keys(self):
+        if not self.is_quiet:
+            print("Adding foreign key constraints...")
+
         for table_name, columns in self.schema.iteritems():
             foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], columns.items()))
             for attribute, reference in foreign_keys:
                 try:
                     self.cursor.execute("ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {}".format(table_name, attribute, reference))
                 except psycopg2.IntegrityError as e:
+                    self.connection.rollback()
                     self.logger.warning(e.message)
+        self.connection.commit()
 
     def table_exists(self, table_name):
         self.cursor.execute("SELECT COUNT(relname) FROM pg_class WHERE relname = %s", [table_name])
