@@ -68,17 +68,14 @@ class GndExtractor:
     def process_entity(self, dump_id, entity_element):
         for table_name, scopes in self.property_mapping[dump_id].iteritems():
             for scope_path, columns in scopes.iteritems():
-                if scope_path == ".":
-                    scope_elements = [entity_element]
-                else:
-                    scope_elements = entity_element.xpath(scope_path, namespaces=self.namespaces)
+                scope_elements = entity_element.xpath(scope_path, namespaces=self.namespaces)
                 if scope_elements is not None:
                     for scope_element in scope_elements:
-                        row = self.process_entity_scope(table_name, entity_element, scope_element, columns)
+                        row = self.process_entity_scope(entity_element, scope_element, columns)
                         if row:
                             yield table_name, row
 
-    def process_entity_scope(self, table_name, entity_element, scope_element, columns):
+    def process_entity_scope(self, entity_element, scope_element, columns):
         row = {}
         for column, properties in columns.iteritems():
             if properties["scope"] == "global":
@@ -88,8 +85,6 @@ class GndExtractor:
             value = self.apply_xpath(affected_element, properties["xpath"])
             if value:
                 row[column] = value
-            else:
-                return
 
         return row
 

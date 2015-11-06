@@ -12,7 +12,7 @@ db_schema = {
             "type": "varchar(256)"
         },
         "life_span": {
-            "type": "varchar(23)"
+            "type": "varchar(32)"
         },
         "place_of_birth": {
             "type": "varchar(16)",
@@ -55,7 +55,7 @@ db_schema = {
             "null": False
         },
         "name": {
-            "type": "varchar(256)"
+            "type": "varchar(512)"
         }
     },
     "work_authors": {

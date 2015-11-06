@@ -2,7 +2,7 @@ property_mapping = {
     # Persons entities (Tpgesamt)
     "tp": {
         "persons": {
-            ".": {
+            "ns:datafield[@tag='079' and ns:subfield[@code='b']='p']/..": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')], 9)",
                     "scope": "local"
@@ -58,7 +58,7 @@ property_mapping = {
     # Literary works entities (Tugesamt)
     "tu": {
         "works": {
-            ".": {
+            "ns:datafield[@tag='079' and ns:subfield[@code='b']='u']/..": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')]/text(), 9)",
                     "scope": "local"
@@ -70,13 +70,13 @@ property_mapping = {
             }
         },
         "work_authors": {
-            "//ns:record[ns:datafield[@tag='079']/ns:subfield[@code='b']='u']": {
+            "ns:datafield[@tag='500' and starts-with(ns:subfield[@code='i'], 'Verfasserschaft')]": {
                 "work": {
-                    "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')], 9)",
+                    "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')]/text(), 9)",
                     "scope": "global"
                 },
                 "author": {
-                    "xpath": "substring(ns:datafield[@tag='500' and starts-with(ns:subfield[@code='i'], 'Verfasserschaft')]/ns:subfield[@code='0' and starts-with(./text(), '(DE-588)')]/text(), 9)",
+                    "xpath": "substring(ns:subfield[@code='0' and starts-with(./text(), '(DE-588)')]/text(), 9)",
                     "scope": "local"
                 }
             }
@@ -86,7 +86,7 @@ property_mapping = {
     # Geographical entities (Tggesamt)
     "tg": {
         "places": {
-            ".": {
+            "ns:datafield[@tag='079' and ns:subfield[@code='b']='g']/..": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')], 9)",
                     "scope": "local"
