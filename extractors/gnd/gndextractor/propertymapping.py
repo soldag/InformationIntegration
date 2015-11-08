@@ -2,7 +2,7 @@ property_mapping = {
     # Persons entities (Tpgesamt)
     "tp": {
         "persons": {
-            "ns:datafield[@tag='079' and ns:subfield[@code='b']='p']/..": {
+            ".": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')], 9)",
                     "scope": "local"
@@ -58,7 +58,7 @@ property_mapping = {
     # Literary works entities (Tugesamt)
     "tu": {
         "works": {
-            "ns:datafield[@tag='079' and ns:subfield[@code='b']='u']/..": {
+            ".": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')]/text(), 9)",
                     "scope": "local"
@@ -86,7 +86,7 @@ property_mapping = {
     # Geographical entities (Tggesamt)
     "tg": {
         "places": {
-            "ns:datafield[@tag='079' and ns:subfield[@code='b']='g']/..": {
+            ".": {
                 "id": {
                     "xpath": "substring(ns:datafield[@tag='035']/ns:subfield[@code='a' and starts-with(./text(), '(DE-588)')], 9)",
                     "scope": "local"

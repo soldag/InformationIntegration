@@ -2,7 +2,7 @@ CREATE TABLE persons (
         id VARCHAR(16) PRIMARY KEY NOT NULL,
         name VARCHAR(256),
         birth_name VARCHAR(256),
-        life_span VARCHAR(23),
+        life_span VARCHAR(64),
         place_of_birth VARCHAR(16),
         place_of_death VARCHAR(16),
         gender CHAR,

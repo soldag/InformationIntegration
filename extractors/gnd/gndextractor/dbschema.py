@@ -12,7 +12,7 @@ db_schema = {
             "type": "varchar(256)"
         },
         "life_span": {
-            "type": "varchar(32)"
+            "type": "varchar(64)"
         },
         "place_of_birth": {
             "type": "varchar(16)",

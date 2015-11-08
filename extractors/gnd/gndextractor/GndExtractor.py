@@ -68,7 +68,10 @@ class GndExtractor:
     def process_entity(self, dump_id, entity_element):
         for table_name, scopes in self.property_mapping[dump_id].iteritems():
             for scope_path, columns in scopes.iteritems():
-                scope_elements = entity_element.xpath(scope_path, namespaces=self.namespaces)
+                if scope_path == ".":
+                    scope_elements = [entity_element]
+                else:
+                    scope_elements = entity_element.xpath(scope_path, namespaces=self.namespaces)
                 if scope_elements is not None:
                     for scope_element in scope_elements:
                         row = self.process_entity_scope(entity_element, scope_element, columns)

@@ -72,7 +72,6 @@ class DatabaseWriter:
         if not self.is_quiet:
             print("Deleting rows violating foreign key constraints...")
 
-        i = 0
         for table_name, columns in self.schema.iteritems():
             foreign_keys = map(lambda (x, y): (x, y["reference"]), filter(lambda (x, y): "reference" in y and y["reference"], columns.items()))
             for attribute, reference in foreign_keys:
@@ -82,9 +81,12 @@ class DatabaseWriter:
                 self.cursor.execute("SELECT {} FROM {}".format(attribute, table_name))
                 for row in self.cursor.fetchall():
                     if row[0] is not None:
-                        self.cursor.execute("SELECT {0} FROM {1} WHERE {0}='{2}'".format(referenced_attribute, referenced_table, row[0]))
+                        self.cursor.execute("SELECT {0} FROM {1} WHERE {0} = %s".format(referenced_attribute, referenced_table), [row[0]])
                         if self.cursor.fetchone() is None:
-                            self.cursor.execute("DELETE FROM {} WHERE {}='{}'".format(table_name, attribute, row[0]))
+                            if "primary_key" in columns[attribute] and columns[attribute]["primary_key"]:
+                                self.cursor.execute("DELETE FROM {} WHERE {} = %s".format(table_name, attribute), [row[0]])
+                            else:
+                                self.cursor.execute("UPDATE {} SET {} = NULL".format(table_name, attribute))
                             self.connection.commit()
 
     def add_foreign_keys(self):
