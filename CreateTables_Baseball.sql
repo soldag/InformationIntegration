@@ -1,3 +1,5 @@
+-- ALTER DATABASE infint_baseball SET datestyle TO "ISO, MDY";
+
 CREATE TABLE Master (
     playerID VARCHAR(10) PRIMARY KEY,
     birthYear INTEGER,
@@ -60,3 +62,19 @@ CREATE TABLE Salaries (
     salary DOUBLE PRECISION,
     PRIMARY KEY ( yearID, teamID, lgID, playerID )
 );
+
+COPY Master FROM 'Master.csv' DELIMITER ',' csv HEADER;
+COPY Salaries FROM 'Salaries.csv' DELIMITER ',' csv HEADER;
+COPY HallOfFame FROM 'HallOfFame.csv' DELIMITER ',' csv HEADER;
+COPY Schools FROM 'Schools.csv' DELIMITER ',' csv HEADER;
+COPY CollegePlaying FROM 'CollegePlaying.csv' DELIMITER ',' csv HEADER;
+
+DELETE FROM HallOfFame WHERE playerID NOT IN (SELECT playerID FROM Master);
+DELETE FROM CollegePlaying WHERE playerID NOT IN (SELECT playerID FROM Master);
+DELETE FROM Salaries WHERE playerID NOT IN (SELECT playerID FROM Master);
+DELETE FROM CollegePlaying WHERE schoolID NOT IN (SELECT schoolID FROM Schools);
+
+ALTER TABLE HallOfFame ADD CONSTRAINT foreignPlayerIDHallOfFame FOREIGN KEY (playerID) REFERENCES master(playerID);
+ALTER TABLE CollegePlaying ADD CONSTRAINT foreignPlayerIDCollegePlaying FOREIGN KEY (playerID) REFERENCES master(playerID);
+ALTER TABLE Salaries ADD CONSTRAINT foreignPlayerIDSalaries FOREIGN KEY (playerID) REFERENCES master(playerID);
+ALTER TABLE CollegePlaying ADD CONSTRAINT foreignSchoolIDCollegePlaying FOREIGN KEY (schoolID) REFERENCES Schools(schoolID);
