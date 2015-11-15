@@ -86,7 +86,7 @@ class DatabaseWriter:
                             if "primary_key" in columns[attribute] and columns[attribute]["primary_key"]:
                                 self.cursor.execute("DELETE FROM {} WHERE {} = %s".format(table_name, attribute), [row[0]])
                             else:
-                                self.cursor.execute("UPDATE {} SET {} = NULL".format(table_name, attribute))
+                                self.cursor.execute("UPDATE {0} SET {1} = NULL WHERE {1} = %s".format(table_name, attribute), [row[0]])
                             self.connection.commit()
 
     def add_foreign_keys(self):
