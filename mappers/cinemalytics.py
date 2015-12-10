@@ -137,7 +137,7 @@ class CinemalyticsMapper:
 
     def create_person_movie_ref(self, person_id, movie_id):
         self.dst_cursor.execute('INSERT INTO person_movie (person_id,movie_id,job_id,role) VALUES(%s,%s,%s,%s)',
-                                [person_id, movie_id, self.DEFAULT_JOB_ID, self.DEFAULT_COUNTRY_TYPE])
+                                [person_id, movie_id, self.DEFAULT_JOB_ID, self.DEFAULT_ROLE])
         self.dst_connection.commit()
 
     def close(self):
