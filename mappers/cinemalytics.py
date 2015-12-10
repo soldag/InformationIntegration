@@ -3,6 +3,7 @@ import psycopg2
 
 
 class CinemalyticsMapper:
+    ID_PREFIX = 'cm_'
     DEFAULT_COUNTRY_TYPE = 'production'
     DEFAULT_JOB_ID = 1
     DEFAULT_ROLE = ''
@@ -13,8 +14,6 @@ class CinemalyticsMapper:
 
         self.last_ids = {}
         self.retrieve_last_ids()
-
-        self.mapped_ids = {}
 
     def _connect(self, host, port, user, password, database):
         connection = psycopg2.connect(host=host,
@@ -27,43 +26,38 @@ class CinemalyticsMapper:
         return connection, cursor
 
     def retrieve_last_ids(self):
-        for table in ['trailer', 'rating', 'country', 'movie', 'person']:
+        for table in ['trailer', 'rating', 'country']:
             self.dst_cursor.execute('SELECT MAX(id) FROM {}'.format(table))
             self.last_ids[table] = self.dst_cursor.fetchone()[0] or 0
 
     def map(self):
-        print "Integrate movie table"
-        self.mapped_ids['movie'] = {}
+        print "Integrate movie table..."
         self.src_cursor.execute('SELECT * FROM cinemalytics.movies')
         for row in self.src_cursor.fetchall():
-
             release_day, release_month, release_year = self.parse_date(row[13])
             trailer_id = self.create_trailer(row[5], row[6])
             rating_id = self.create_rating(row[11], row[10])
-            movie_id = self.create_movie(row[1], row[3], row[2], row[4], trailer_id, row[8], row[9], row[12],
+            movie_id = self.create_movie(row[0], row[1], row[3], row[2], row[4], trailer_id, row[8], row[9], row[12],
                                          release_day, release_month, release_year, row[14], row[15], row[16], row[17],
                                          rating_id)
-            self.mapped_ids['movie'][row[0]] = movie_id
 
             country_id = self.get_or_create_country(row[7])
             self.create_movie_country_ref(movie_id, country_id)
         self.dst_connection.commit()
 
-        print "Integrate actors table"
-        self.mapped_ids['person'] = {}
+        print "Integrate actors table..."
         self.src_cursor.execute('SELECT * FROM cinemalytics.actors')
         for row in self.src_cursor.fetchall():
             first_name, last_name = self.split_name(row[1])
             rating_id = self.create_rating(row[4])
-            person_id = self.create_person(first_name, last_name, row[2], rating_id, row[3])
-            self.mapped_ids['person'][row[0]] = person_id
+            self.create_person(row[0], first_name, last_name, row[2], rating_id, row[3])
         self.dst_connection.commit()
 
-        print "Integrate actor_movies table"
+        print "Integrate actor_movies table..."
         self.src_cursor.execute('SELECT * FROM cinemalytics.actor_movies')
         for row in self.src_cursor.fetchall():
-            person_id = self.mapped_ids['person'][row[0]]
-            movie_id = self.mapped_ids['movie'][row[1]]
+            person_id = self.ID_PREFIX + row[0]
+            movie_id = self.ID_PREFIX + row[1]
             self.create_person_movie_ref(person_id, movie_id)
         self.dst_connection.commit()
 
@@ -82,8 +76,6 @@ class CinemalyticsMapper:
     def split_name(self, name):
         split_names = name.split(' ')
         first_name = ' '.join(split_names[:-1])
-        if not first_name:
-            first_name = None
         last_name = split_names[-1]
 
         return first_name, last_name
@@ -119,22 +111,20 @@ class CinemalyticsMapper:
 
             return trailer_id
 
-    def create_movie(self, imdb_id, title, original_title, description, trailer_id, region,
+    def create_movie(self, id, imdb_id, title, original_title, description, trailer_id, region,
                      genre, censor_rating, release_day, release_month, release_year,
                      runtime, budget, revenue, poster_path, rating_id):
-        self.last_ids['movie'] += 1
-        movie_id = self.last_ids['movie']
+        movie_id = self.ID_PREFIX + id
         self.dst_cursor.execute('INSERT INTO movie (id,imdb_id,title,original_title,description,trailer_id,region,genre,censor_rating,release_day,release_month,release_year,runtime,budget,revenue,poster_path,rating_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                [self.last_ids['movie'], imdb_id, title, original_title, description, trailer_id,
+                                [movie_id, imdb_id, title, original_title, description, trailer_id,
                                  region, genre, censor_rating, release_day, release_month, release_year,
                                  runtime, budget, revenue, poster_path, rating_id])
         self.dst_connection.commit()
 
         return movie_id
 
-    def create_person(self, first_name, last_name, gender, rating_id, profile_photo_path):
-        self.last_ids['person'] += 1
-        person_id = self.last_ids['person']
+    def create_person(self, id, first_name, last_name, gender, rating_id, profile_photo_path):
+        person_id = self.ID_PREFIX + id
         self.dst_cursor.execute('INSERT INTO person (id,first_name,last_name,gender,rating_id,profile_photo_path) VALUES(%s,%s,%s,%s,%s,%s)',
                                 [person_id, first_name, last_name, gender, rating_id, profile_photo_path])
         self.dst_connection.commit()
@@ -153,10 +143,3 @@ class CinemalyticsMapper:
     def close(self):
         self.src_connection.close()
         self.dst_connection.close()
-
-
-# TODO: testing
-if __name__ == "__main__":
-    mapper = CinemalyticsMapper('localhost', 5432, 'soldag', '', 'cinemalytics', 'integrated')
-    mapper.map()
-    mapper.close()
