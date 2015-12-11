@@ -61,6 +61,10 @@ class CinemalyticsMapper:
             self.create_person_movie_ref(person_id, movie_id)
         self.dst_connection.commit()
 
+    def filter_empty(self, string):
+        if string:
+            return string
+
     def parse_date(self, date):
         day = month = year = None
         date_search = re.search('((?P<month>\d?\d)/(?P<day>\d?\d)/)?(?P<year>\d\d\d\d)', date)
@@ -116,9 +120,11 @@ class CinemalyticsMapper:
                      runtime, budget, revenue, poster_path, rating_id):
         movie_id = self.ID_PREFIX + id
         self.dst_cursor.execute('INSERT INTO movie (id,imdb_id,title,original_title,description,trailer_id,region,genre,censor_rating,release_day,release_month,release_year,runtime,budget,revenue,poster_path,rating_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                [movie_id, imdb_id, title, original_title, description, trailer_id,
-                                 region, genre, censor_rating, release_day, release_month, release_year,
-                                 runtime, budget, revenue, poster_path, rating_id])
+                                [movie_id, self.filter_empty(imdb_id), self.filter_empty(title),
+                                 self.filter_empty(original_title), self.filter_empty(description), trailer_id,
+                                 self.filter_empty(region), self.filter_empty(genre), self.filter_empty(censor_rating),
+                                 release_day, release_month, release_year, runtime, budget, revenue,
+                                 self.filter_empty(poster_path), rating_id])
         self.dst_connection.commit()
 
         return movie_id
@@ -126,13 +132,15 @@ class CinemalyticsMapper:
     def create_person(self, id, first_name, last_name, gender, rating_id, profile_photo_path):
         person_id = self.ID_PREFIX + id
         self.dst_cursor.execute('INSERT INTO person (id,first_name,last_name,gender,rating_id,profile_photo_path) VALUES(%s,%s,%s,%s,%s,%s)',
-                                [person_id, first_name, last_name, gender, rating_id, profile_photo_path])
+                                [person_id, self.filter_empty(first_name), self.filter_empty(last_name),
+                                 self.filter_empty(gender), rating_id, self.filter_empty(profile_photo_path)])
         self.dst_connection.commit()
 
         return person_id
 
     def create_movie_country_ref(self, movie_id, country_id):
-        self.dst_cursor.execute('INSERT INTO movie_country VALUES(%s,%s,%s)', [country_id, movie_id, self.DEFAULT_COUNTRY_TYPE])
+        self.dst_cursor.execute('INSERT INTO movie_country VALUES(%s,%s,%s)',
+                                [country_id, movie_id, self.DEFAULT_COUNTRY_TYPE])
         self.dst_connection.commit()
 
     def create_person_movie_ref(self, person_id, movie_id):
