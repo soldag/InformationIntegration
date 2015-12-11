@@ -170,7 +170,7 @@ class UciKddMapper:
             role = self.DEFAULT_ROLE
 
         self.dst_cursor.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s',
-                                [person_id, movie_id, str(job_id), role])
+                                [person_id, movie_id, job_id, role])
         if self.dst_cursor.fetchone() is None:
             self.dst_cursor.execute('INSERT INTO person_movie (person_id,movie_id,job_id,role,role_type,awards,comment) VALUES(%s,%s,%s,%s,%s,%s,%s)',
                                     [person_id, movie_id, job_id, role, role_type, awards, comment])
