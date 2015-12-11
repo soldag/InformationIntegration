@@ -26,6 +26,9 @@ last_country_id = cursor2.fetchone()[0] or 0
 cursor2.execute('SELECT MAX(id) FROM rating')
 last_rating_id = cursor2.fetchone()[0] or 0
 
+cursor2.execute('SELECT MAX(id) FROM job')
+last_job_id = cursor2.fetchone()[0] or 0
+
 #insert actor in person
 cursor1.execute('SELECT * FROM actor')
 print 'start persons'
@@ -91,12 +94,8 @@ for row in cursor1.fetchall():
 		name = name.strip()
 		splitted_name = name.split(' ')
 		last_name = splitted_name[len(splitted_name)-1]
-		first_name = ''
-		for y in range(0, len(splitted_name) -1):
-				first_name += splitted_name[y]
-				if y != len(splitted_name) -1:
-					first_name += ' '
-
+		first_name = ' '.join(splitted_name[:-1])
+	
 	old_id = row[0]
 	new_id = "mdb_" + str(old_id)
 
@@ -148,9 +147,9 @@ for row in cursor1.fetchall():
 	#parse video
 	if video is not None:
 		if video == 0:
-			video = True
-		elif video == 1:
 			video = False
+		elif video == 1:
+			video = True
 
 	#parse release_date	
 	if release_date:
@@ -186,8 +185,7 @@ for row in cursor1.fetchall():
 	#map spoken languages to language table
 	if spoken_languages:
 		splitted_slanguage = spoken_languages.split(',')
-		for y in range(0, len(splitted_slanguage) - 1):
-			language_name = splitted_slanguage[y]
+		for language_name in splitted_slanguage:
 			cursor2.execute('SELECT id FROM language WHERE language = %s', [language_name])
 			row = cursor2.fetchone()
 			if row is not None:
@@ -195,14 +193,13 @@ for row in cursor1.fetchall():
 			else:
 				last_language_id += 1
 				language_id = last_language_id
-				cursor2.execute('INSERT INTO language VALUES(%s,%s)', (language_id, original_language))
+				cursor2.execute('INSERT INTO language VALUES(%s,%s)', (language_id, language_name))
 			cursor2.execute('INSERT INTO movie_language(language_id, movie_id, type) VALUES(%s,%s,%s)', [language_id, new_id, 'spoken'])
 	
 	#map country to country table
 	if production_countries:
 		splitted_pcountries = production_countries.split(',')
-		for i in range(0, len(splitted_pcountries) -1):
-			country_name = splitted_pcountries[i]
+		for country_name in splitted_pcountries:
 			cursor2.execute('SELECT id FROM country WHERE name = %s', [country_name])
 			row = cursor2.fetchone()
 			if row is not None:
@@ -215,3 +212,62 @@ for row in cursor1.fetchall():
 
 connection2.commit()
 print 'end movies'
+
+#write join table for actors
+
+cursor1.execute('SELECT * FROM playsinmovie')
+
+print 'start join table'
+
+for row in cursor1.fetchall():
+	old_movie_id = row[1]
+	old_actor_id = row[0]
+	role = row[2]
+	job_id = 1
+	new_movie_id = id_mapping_movies[old_movie_id]
+	new_actor_id = id_mapping_actors[old_actor_id]
+
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s',
+								[new_actor_id, new_movie_id, job_id, role])
+	if cursor2.fetchone() is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, role) VALUES (%s,%s,%s,%s)', (new_actor_id, new_movie_id, job_id, role))
+connection2.commit()
+
+print 'end join table'
+
+#write join table for crew
+
+cursor1.execute('SELECT * FROM crewinmovie')
+
+print 'start join table'
+
+for row in cursor1.fetchall():
+	old_movie_id = row[1]
+	old_actor_id = row[0]
+	role = ''
+	job_name = row[2]
+
+	cursor2.execute('SELECT id FROM job WHERE name = %s', [job_name])
+	row = cursor2.fetchone()
+	if row is not None:
+		job_id = row[0]
+	else:
+		last_job_id += 1
+		job_id = last_job_id
+		cursor2.execute('INSERT INTO job VALUES(%s,%s)', [job_id, job_name])
+
+	new_movie_id = id_mapping_movies[old_movie_id]
+	new_actor_id = id_mapping_actors[old_actor_id]
+
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s',
+								[new_actor_id, new_movie_id, job_id, role])
+	if cursor2.fetchone() is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, role) VALUES (%s,%s,%s,%s)', (new_actor_id, new_movie_id, job_id, role))
+connection2.commit()
+
+print 'end join table'
+
+
+
+
+
