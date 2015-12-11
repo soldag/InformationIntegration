@@ -20,8 +20,7 @@ id_mapping_movies = {}
 cursor2.execute('SELECT MAX(id) FROM language')
 last_language_id = cursor2.fetchone()[0] or 0
 
-cursor2.execute('SELECT MAX(id) FROM country')
-last_country_id = cursor2.fetchone()[0] or 0
+last_country_id = 0
 
 cursor2.execute('SELECT MAX(id) FROM rating')
 last_rating_id = cursor2.fetchone()[0] or 0
@@ -206,7 +205,7 @@ for row in cursor1.fetchall():
 				country_id = row[0]
 			else:
 				last_country_id += 1
-				country_id = last_country_id
+				country_id = 'mdb_' + last_country_id
 				cursor2.execute('INSERT INTO country VALUES(%s,%s)', (country_id, country_name))
 			cursor2.execute('INSERT INTO movie_country(country_id, movie_id, type) VALUES(%s,%s,%s)', [country_id, new_id, 'production'])
 
