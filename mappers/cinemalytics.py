@@ -92,7 +92,7 @@ class CinemalyticsMapper:
                 country_id = row[0]
             else:
                 self.last_ids['country'] += 1
-                country_id = self.last_ids['country']
+                country_id = self.ID_PREFIX + str(self.last_ids['country'])
                 self.dst_cursor.execute('INSERT INTO country VALUES(%s,%s)', [country_id, country_name])
                 self.dst_connection.commit()
 
