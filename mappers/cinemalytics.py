@@ -26,9 +26,10 @@ class CinemalyticsMapper:
         return connection, cursor
 
     def retrieve_last_ids(self):
-        for table in ['trailer', 'rating', 'country']:
+        for table in ['trailer', 'rating']:
             self.dst_cursor.execute('SELECT MAX(id) FROM {}'.format(table))
             self.last_ids[table] = self.dst_cursor.fetchone()[0] or 0
+        self.last_ids['country'] = 0
 
     def map(self):
         print "Integrate movie table..."
