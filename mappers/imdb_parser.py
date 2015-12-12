@@ -157,7 +157,13 @@ for row in cursor1.fetchall():
 	new_movie_id = id_mapping_movies[old_movie_id]
 	new_director_id = id_mapping_directors[old_director_id]
 
-	cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_director_id, new_movie_id, job_id, comment, role))
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [new_director_id, new_movie_id, job_id, role])
+	row = cursor2.fetchone()
+	if row is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_director_id, new_movie_id, job_id, comment, role))
+	elif comment is not None and row[6] != comment:
+		comment = row[6] + ' ' + comment
+		cursor2.execute('UPDATE person_movie SET comment = %s WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [comment, new_director_id, new_movie_id, job_id, role])
 connection2.commit()
 
 print 'end join table directors'
@@ -213,7 +219,14 @@ for row in cursor1.fetchall():
 	new_movie_id = id_mapping_movies[old_movie_id]
 	new_cinematgrs_id = id_mapping_cinematgrs[old_cinematgrs_id]
 
-	cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_cinematgrs_id, new_movie_id, job_id, comment, role))
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [new_cinematgrs_id, new_movie_id, job_id, role])
+	row = cursor2.fetchone()
+	if row is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_cinematgrs_id, new_movie_id, job_id, comment, role))
+	elif comment is not None and row[6] != comment:
+		comment = row[6] + ' ' + comment
+		cursor2.execute('UPDATE person_movie SET comment = %s WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [comment, new_cinematgrs_id, new_movie_id, job_id, role])
+
 connection2.commit()
 print 'end join table cinematgrs'
 print datetime.datetime.now()
@@ -267,7 +280,14 @@ for row in cursor1.fetchall():
 	new_movie_id = id_mapping_movies[old_movie_id]
 	new_producers_id = id_mapping_producers[old_producers_id]
 
-	cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_producers_id, new_movie_id, job_id, comment, role))
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [new_producers_id, new_movie_id, job_id, role])
+	row = cursor2.fetchone()
+	if row is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_producers_id, new_movie_id, job_id, comment, role))
+	elif comment is not None and row[6] != comment:
+		comment = row[6] + ' ' + comment
+		cursor2.execute('UPDATE person_movie SET comment = %s WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [comment, new_producers_id, new_movie_id, job_id, role])
+
 connection2.commit()
 print 'end join table producers'
 print datetime.datetime.now()
@@ -322,7 +342,14 @@ for row in cursor1.fetchall():
 	new_movie_id = id_mapping_movies[old_movie_id]
 	new_writers_id = id_mapping_writers[old_writers_id]
 
-	cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_writers_id, new_movie_id, job_id, comment,role))
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [new_writers_id, new_movie_id, job_id, role])
+	row = cursor2.fetchone()
+	if row is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_writers_id, new_movie_id, job_id, comment, role))
+	elif comment is not None and row[6] != comment:
+		comment = row[6] + ' ' + comment
+		cursor2.execute('UPDATE person_movie SET comment = %s WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [comment, new_writers_id, new_movie_id, job_id, role])
+
 connection2.commit()
 print 'end join table writers'
 print datetime.datetime.now()
@@ -363,9 +390,9 @@ print datetime.datetime.now()
 
 #write join table for composers and movies
 
-cursor1.execute('SELECT * FROM movies2writers')
+cursor1.execute('SELECT * FROM movies2composers')
 
-print 'start join table writers'
+print 'start join table composers'
 print datetime.datetime.now()
 
 for row in cursor1.fetchall():
@@ -377,7 +404,14 @@ for row in cursor1.fetchall():
 	new_movie_id = id_mapping_movies[old_movie_id]
 	new_composers_id = id_mapping_composers[old_composers_id]
 
-	cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_composers_id, new_movie_id, job_id, comment, role))
+	cursor2.execute('SELECT * FROM person_movie WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [new_composers_id, new_movie_id, job_id, role])
+	row = cursor2.fetchone()
+	if row is None:
+		cursor2.execute('INSERT INTO person_movie(person_id, movie_id, job_id, comment, role) VALUES (%s,%s,%s,%s,%s)', (new_composers_id, new_movie_id, job_id, comment, role))
+	elif comment is not None and row[6] != comment:
+		comment = row[6] + ' ' + comment
+		cursor2.execute('UPDATE person_movie SET comment = %s WHERE person_id=%s AND movie_id=%s AND job_id=%s AND role=%s', [comment, new_composers_id, new_movie_id, job_id, role])
+
 connection2.commit()
 print 'end join table composers'
 print datetime.datetime.now()
