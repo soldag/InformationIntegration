@@ -205,7 +205,7 @@ for row in cursor1.fetchall():
 				country_id = row[0]
 			else:
 				last_country_id += 1
-				country_id = 'mdb_' + last_country_id
+				country_id = 'mdb_' + str(last_country_id)
 				cursor2.execute('INSERT INTO country VALUES(%s,%s)', (country_id, country_name))
 			cursor2.execute('INSERT INTO movie_country(country_id, movie_id, type) VALUES(%s,%s,%s)', [country_id, new_id, 'production'])
 
