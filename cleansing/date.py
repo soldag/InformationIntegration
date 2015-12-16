@@ -64,15 +64,15 @@ for row in cursor.fetchall():
 			death_year = None
 	if birth_day != row[0]:
 		cursor.execute('UPDATE person SET birth_day=%s WHERE id = %s', [birth_day,id])
-	elif birth_month != row[1]:
+	if birth_month != row[1]:
 		cursor.execute('UPDATE person SET birth_month=%s WHERE id = %s', [birth_month,id])
-	elif birth_year != row[2]:
+	if birth_year != row[2]:
 		cursor.execute('UPDATE person SET birth_year=%s WHERE id = %s', [birth_year,id])
-	elif death_day != row[3]:
+	if death_day != row[3]:
 		cursor.execute('UPDATE person SET death_day=%s WHERE id = %s', [death_day,id])
-	elif death_month != row[4]:
+	if death_month != row[4]:
 		cursor.execute('UPDATE person SET death_month=%s WHERE id = %s', [death_month,id])
-	elif death_year != row[5]:
+	if death_year != row[5]:
 		cursor.execute('UPDATE person SET death_year=%s WHERE id = %s', [death_year,id])
 connection.commit()
 
