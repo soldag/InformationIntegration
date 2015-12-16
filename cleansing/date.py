@@ -17,14 +17,13 @@ def parse_to_date_object(day,month,year):
 
 connection = psycopg2.connect(host='localhost',
 									port=5432,
-									database='infint_integrated_final',
+									database='infint_integrated',
 									user='Rosa')
 
 cursor = connection.cursor()
 
 cursor.execute('SELECT birth_day, birth_month, birth_year, death_day, death_month, death_year, id FROM person')
 
-i = 0
 for row in cursor.fetchall():
 	birth_day = row[0]
 	birth_month = row[1]
@@ -36,7 +35,6 @@ for row in cursor.fetchall():
 	try:
 		birth_date = parse_to_date_object(birth_day,birth_month,birth_year)
 	except ValueError as e: 
-		print e
 		if str(e) == 'day is out of range for month':
 			birth_day = None
 			birth_date = parse_to_date_object(birth_day,birth_month,birth_year)
@@ -46,7 +44,6 @@ for row in cursor.fetchall():
 	try:
 		death_date = parse_to_date_object(death_day,death_month,death_year)
 	except ValueError as e:
-		print e
 		if str(e) == 'day is out of range for month':
 			death_day = None
 			death_date = parse_to_date_object(death_day,death_month,death_year)
@@ -55,7 +52,6 @@ for row in cursor.fetchall():
 			death_date = parse_to_date_object(death_day,death_month,death_year)
 	if birth_date is not None and death_date is not None:
 		if birth_date > death_date:
-			i += 1
 			birth_day = None
 			birth_month = None
 			birth_year = None
@@ -76,8 +72,36 @@ for row in cursor.fetchall():
 		cursor.execute('UPDATE person SET death_year=%s WHERE id = %s', [death_year,id])
 connection.commit()
 
+cursor.execute('SELECT id, start_work_year, end_work_year FROM person')
 
+for row in cursor.fetchall():
+	id = row[0]
+	start_work_year = row[1]
+	end_work_year = row[2]
 
+	if start_work_year is not None:
+		try:
+			datetime.date(start_work_year,1,1)
+		except ValueError as e:
+			start_work_year = None
+
+	if end_work_year is not None:
+		try: 
+			datetime.date(end_work_year,1,1)
+		except ValueError as e:
+			end_work_year = None
+
+	if start_work_year is not None and end_work_year is not None:
+		if start_work_year > end_work_year:
+			start_work_year = None
+			end_work_year = None
+
+	if start_work_year != row[1]:
+		cursor.execute('UPDATE person SET start_work_year=%s WHERE id = %s', [start_work_year,id])
+	if end_work_year != row[2]:
+		cursor.execute('UPDATE person SET end_work_year=%s WHERE id = %s', [end_work_year,id])
+
+connection.commit()
 
 
 
