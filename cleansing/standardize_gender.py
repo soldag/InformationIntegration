@@ -12,7 +12,7 @@ connection = psycopg2.connect(host='localhost',
                               database='integrated')
 cursor = connection.cursor()
 
-cursor.execute('SELECT COUNT(id) FROM person WHERE gender NOT IN (%s,%s)', [MALE, FEMALE])
+cursor.execute('SELECT COUNT(id) FROM person WHERE gender NOT IN (NULL, %s,%s)', [MALE, FEMALE])
 person_count = cursor.fetchone()[0]
 
 i = 0
