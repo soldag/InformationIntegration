@@ -103,6 +103,44 @@ for row in cursor.fetchall():
 
 connection.commit()
 
+cursor.execute('SELECT id, release_day, release_month, release_year FROM movie')
+
+for row in cursor.fetchall():
+	id = row[0]
+	release_day = row[1]
+	release_month = row[2]
+	release_year = row[3]
+
+	release_date = parse_to_date_object(release_day,release_month,release_year)
+
+cursor.execute('SELECT id, publication_day, publication_month, publication_year FROM work')
+
+for row in cursor.fetchall():
+	id = row[0]
+	publication_day = row[1]
+	publication_month = row[2]
+	publication_year = row[3]
+
+	try:
+		publication_date = parse_to_date_object(publication_day,publication_month,publication_year)
+	except ValueError as e:
+		if str(e) == 'day is out of range for month':
+			publication_day = None
+			publication_date = parse_to_date_object(publication_day,publication_month,publication_year)
+		elif str(e) == 'year is out of range':
+			publication_year = None	
+			publication_date = parse_to_date_object(publication_day,publication_month,publication_year)
+
+	if publication_day != row[1]:
+		cursor.execute('UPDATE work SET publication_day=%s WHERE id = %s', [publication_day,id])
+	if publication_year != row[3]:
+		cursor.execute('UPDATE work SET publication_year=%s WHERE id = %s', [publication_year,id])
+connection.commit()
+
+
+
+
+
 
 
 
