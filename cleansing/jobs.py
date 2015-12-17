@@ -12,7 +12,7 @@ cursor = connection.cursor()
 
 # Delete jobs that are not referenced
 print "Delete abandoned jobs..."
-# cursor.execute('DELETE FROM job WHERE id NOT IN (SELECT DISTINCT(job_id) FROM person_movie)')
+cursor.execute('DELETE FROM job WHERE id NOT IN (SELECT DISTINCT(job_id) FROM person_movie)')
 
 # Standardize & clean remaining jobs
 print "Standardize & clean jobs..."
