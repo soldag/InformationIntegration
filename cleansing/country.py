@@ -16,7 +16,6 @@ cursor.execute('SELECT id,name FROM country')
 for row in cursor.fetchall():
     country_id = row[0]
     name = row[1]
-    code = name
     if name is not None:
         if '\\' == name[0]:
             name = name[1:3]
