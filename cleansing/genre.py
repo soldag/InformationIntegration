@@ -23,10 +23,6 @@ connection = psycopg2.connect(host='localhost',
                               database='infint_integrated')
 cursor = connection.cursor()
 
-cursor.execute('DROP TABLE movie_genre')
-cursor.execute('DROP TABLE genre')
-connection.commit()
-
 cursor.execute('CREATE TABLE genre (id character varying NOT NULL, genre character varying(50))')
 cursor.execute('CREATE TABLE movie_genre (movie_id character varying, genre_id character varying)')
 cursor.execute('ALTER TABLE ONLY genre ADD CONSTRAINT genre_pkey PRIMARY KEY (id)')
