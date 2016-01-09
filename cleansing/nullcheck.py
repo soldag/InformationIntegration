@@ -1,7 +1,7 @@
 from __future__ import generators
 import psycopg2
 import datetime
-
+import re
 
 connection = psycopg2.connect(host='localhost',
 								port=5432,
@@ -17,6 +17,26 @@ def check_attributes(row):
 	for i in range(1, len(row)):
 		if row[i] == '' or row[i] == ' ':
 			new_attributes[i] = None
+		else:
+			new_attributes[i] = row[i]
+	return new_attributes
+
+def check_goodreads_strings(row):
+	new_attributes = {}
+	for i in range(1, len(row)):
+		matched = re.match( r'.*[\?].*[\?].*$', str(row[i]), re.M|re.I)
+		if matched:
+			print i
+			print str(row[i])
+			new_attributes[i] = re.sub(r'[^A-Za-z0-9]*\?[\?\!](\?)+[^A-Za-z0-9]*', '', str(row[i]))
+			new_attributes[i] = re.sub(r'\((\?)+\)', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\(\)', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\A\ \-\ ', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\A(\?\.)+', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\b', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\A\?\?$', '', str(new_attributes[i]))
+			new_attributes[i] = re.sub(r'\A\?\?\ \-', '', str(new_attributes[i]))
+			print str(new_attributes[i])
 		else:
 			new_attributes[i] = row[i]
 	return new_attributes
@@ -252,9 +272,11 @@ while i <= rows:
     for row in results:
 		id = row[0]
 		new_a = check_attributes(row)
+		new_a = check_goodreads_strings(row)
 
 		cursor2.execute('UPDATE person SET first_name=%s,last_name=%s,stage_name=%s, comment=%s, profile_photo_path=%s, biography=%s, homepage=%s, imdb_id=%s, place_of_birth=%s, place_of_death=%s, photo=%s, occupation=%s WHERE id=%s',
                                         [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], new_a[8], new_a[9], new_a[10], new_a[11], new_a[12], id])
+		
 		i = i + 1
 		if rows - i < arraysize:
 			arraysize = rows - i
@@ -372,9 +394,11 @@ while i <= rows:
     for row in results:
 		id = row[0]
 		new_a = check_attributes(row)
+		new_a = check_goodreads_strings(row)
 
 		cursor2.execute('UPDATE work SET title=%s, description=%s, edition_information=%s, format=%s, isbn=%s, isbn13=%s, publisher=%s WHERE id=%s',
                                         [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], id])
+		
 		i = i + 1
 		if rows - i < arraysize:
 			arraysize = rows - i
