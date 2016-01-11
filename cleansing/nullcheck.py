@@ -12,10 +12,12 @@ cursor = connection.cursor()
 cursor2 = connection.cursor()
 arraysize = 1000
 
-def check_attributes(row):
+def check_attributes(row, check_unknown = True):
 	new_attributes = {}
 	for i in range(1, len(row)):
-		if row[i] == '' or row[i] == ' ' or row[i] == 'unknown':
+		if row[i] == '' or row[i] == ' ':
+			new_attributes[i] = None
+		elif check_unknown and row[i] == 'unknown':
 			new_attributes[i] = None
 		else:
 			new_attributes[i] = row[i]
@@ -37,30 +39,6 @@ def check_goodreads_strings(row):
 		else:
 			new_attributes[i] = row[i]
 	return new_attributes
-
-print 'start artist_credit'
-print datetime.datetime.now()
-
-cursor.execute('SELECT COUNT(id) FROM artist_credit')
-rows = cursor.fetchone()[0]
-
-cursor.execute('SELECT id, name FROM artist_credit')
-
-i = 0
-while (i <= rows and arraysize != 0) :
-    results = cursor.fetchmany(arraysize)
-    for row in results:
-		id = row[0]
-		new_a = check_attributes(row)
-
-		cursor2.execute('UPDATE artist_credit SET name=%s WHERE id=%s',
-                                        [new_a[1], id])
-		i = i + 1
-		if rows - i < arraysize:
-			arraysize = rows - i
-
-print 'end artist_credit'
-print datetime.datetime.now()
 
 print 'start artist_credit_name'
 print datetime.datetime.now()
@@ -105,7 +83,7 @@ while (i <= rows and arraysize != 0) :
 		new_a = check_attributes(row)
 
 		cursor2.execute('UPDATE country SET name=%s WHERE id=%s',
-                                        [new_a[1], id])
+									[new_a[1], id])
 		i = i + 1
 		if rows - i < arraysize:
 			arraysize = rows - i
@@ -303,7 +281,7 @@ arraysize = 1000
 cursor.execute('SELECT COUNT(id) FROM release')
 rows = cursor.fetchone()[0]
 
-cursor.execute('SELECT id, name, barcode, comment FROM release')
+cursor.execute('SELECT id, barcode FROM release')
 
 i = 0
 while (i <= rows and arraysize != 0) :
@@ -312,8 +290,8 @@ while (i <= rows and arraysize != 0) :
 		id = row[0]
 		new_a = check_attributes(row)
 
-		cursor2.execute('UPDATE release SET name=%s, barcode=%s, comment=%s WHERE id=%s',
-                                        [new_a[1], new_a[2], new_a[3], id])
+		cursor2.execute('UPDATE release SET barcode=%s WHERE id=%s',
+                                        [new_a[1], id])
 		i = i + 1
 		if rows - i < arraysize:
 			arraysize = rows - i
