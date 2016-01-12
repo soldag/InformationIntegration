@@ -47,7 +47,7 @@ arraysize = 500
 cursor.execute('SELECT COUNT(artist_credit_id) FROM artist_credit_name')
 rows = cursor.fetchone()[0]
 
-cursor.execute('SELECT artist_credit_id, person_id, name, join_phrase FROM artist_credit_name')
+cursor.execute('SELECT artist_credit_id, person_id, name FROM artist_credit_name')
 
 i = 0
 while (i <= rows and arraysize != 0 and rows != 0) :
@@ -57,8 +57,8 @@ while (i <= rows and arraysize != 0 and rows != 0) :
     	person_id = row[1]
     	new_a = check_attributes(row)
 
-    	cursor2.execute('UPDATE artist_credit_name SET name=%s, join_phrase=%s WHERE artist_credit_id=%s AND person_id=%s',
-                                        [new_a[2], new_a[3], artist_credit_id, person_id])
+    	cursor2.execute('UPDATE artist_credit_name SET name=%s WHERE artist_credit_id=%s AND person_id=%s',
+                                        [new_a[2], artist_credit_id, person_id])
     	i = i + 1
     	if rows - i < arraysize:
 			arraysize = rows - i
