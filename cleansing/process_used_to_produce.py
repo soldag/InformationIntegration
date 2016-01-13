@@ -97,6 +97,8 @@ for row in cursor.fetchall():
 				if element != processes[len(processes) - 1]:
 					process += '; '
 			elif element == '' or element == 'prc' or element == '$' or element == 'b-0w' or element == 'TS' or element == 'AO' or element == 'Cof':
+				if process.endswith(';')
+					process = process[:-2]
 				pass
 			else:
 				process += element
