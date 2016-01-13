@@ -205,8 +205,8 @@ while (i <= rows and arraysize != 0) :
     results = cursor.fetchmany(arraysize)
     for row in results:
 		id = row[0]
-		new_a = check_attributes(row)
 		new_a = check_goodreads_strings(row)
+		new_a = check_attributes(row)
 
 		cursor2.execute('UPDATE person SET first_name=%s,last_name=%s,stage_name=%s, comment=%s, profile_photo_path=%s, biography=%s, homepage=%s, imdb_id=%s, place_of_birth=%s, place_of_death=%s, photo=%s, occupation=%s WHERE id=%s',
                                         [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], new_a[8], new_a[9], new_a[10], new_a[11], new_a[12], id])
@@ -338,8 +338,8 @@ while (i <= rows and arraysize != 0) :
     results = cursor.fetchmany(arraysize)
     for row in results:
 		id = row[0]
-		new_a = check_attributes(row)
 		new_a = check_goodreads_strings(row)
+		new_a = check_attributes(row)
 
 		cursor2.execute('UPDATE work SET title=%s, description=%s, edition_information=%s, format=%s, isbn=%s, isbn13=%s, publisher=%s WHERE id=%s',
                                         [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], id])
