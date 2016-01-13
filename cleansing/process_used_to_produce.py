@@ -2,8 +2,8 @@ import psycopg2
 
 connection = psycopg2.connect(host='localhost',
                               port=5432,
-                              user='Rosa',
-                              database='infint_integrated')
+                              user='Henni',
+                              database='integrated_table')
 cursor = connection.cursor()
 
 cursor.execute('ALTER TABLE movie ALTER COLUMN process_used_to_produce TYPE character varying(255)')
@@ -97,7 +97,7 @@ for row in cursor.fetchall():
 				if element != processes[len(processes) - 1]:
 					process += '; '
 			elif element == '' or element == 'prc' or element == '$' or element == 'b-0w' or element == 'TS' or element == 'AO' or element == 'Cof':
-				if process.endswith(';')
+				if process.endswith(';'):
 					process = process[:-2]
 				pass
 			else:
