@@ -20,25 +20,51 @@ def clean_works():
     select_cursor = connection.cursor()
     edit_cursor = connection.cursor()
 
-    # Count rows in work table for calculating the progress
-    select_cursor.execute('SELECT COUNT(id) FROM work')
-    work_count = select_cursor.fetchone()[0]
+    print "Apply blocking 1"
+    duplicates_count = split_into_blocks(select_cursor, edit_cursor,
+                                         'SELECT * FROM work WHERE LOWER(title) LIKE %s',
+                                         ['the %'], 4)
 
+    print "Apply blocking 2"
+    duplicates_count += split_into_blocks(select_cursor, edit_cursor,
+                                          'SELECT * FROM work WHERE LOWER(title) LIKE %s',
+                                          ['sonate%'], 4)
+
+    print "Apply blocking 3"
+    duplicates_count += split_into_blocks(select_cursor, edit_cursor,
+                                          'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s',
+                                          ['the %', 'sonate%'], 4)
+
+    # Commit all database changes
+    # connection.commit()
+
+    print('%d duplicates found.' % duplicates_count)
+
+
+def split_into_blocks(select_cursor, edit_cursor, query, arguments=None, title_offset=0):
+    if arguments is None:
+        arguments = []
+
+    # Count rows in work table for calculating the progress
     i = 0
     last_process = -1
+    count_query = query.replace('*', 'COUNT(*)')
+    select_cursor.execute(count_query, arguments)
+    work_count = select_cursor.fetchone()[0]
+
     row_bucket = []
     current_first_char = None
     duplicates_count = 0
-    # Group rows by first title character and find dupicates within these groups
-    select_cursor.execute('SELECT * FROM work ORDER BY title', ['foo', 'bar'])
+
+    select_cursor.execute(query, arguments)
     while i < work_count:
         row = select_cursor.fetchone()
 
         # Check, if last row has been read
         if row is None:
-            break
+            return
 
-        title = row[1]
+        title = row[1][title_offset:]
         if title:
             first_title_char = title[0].lower()
             if current_first_char != first_title_char:
@@ -48,7 +74,6 @@ def clean_works():
                     row_bucket = []
 
                 current_first_char = first_title_char
-                print 'Grouping by "%s"' % current_first_char
 
             row_bucket.append(row)
 
@@ -62,10 +87,7 @@ def clean_works():
     # Find duplicates within last group
     duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
-    # Commit all database changes
-    # connection.commit()
-
-    print('%d duplicates found.' % duplicates_count)
+    return duplicates_count
 
 
 def find_duplicates(cursor, rows):
