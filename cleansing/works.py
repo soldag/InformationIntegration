@@ -22,33 +22,35 @@ def clean_works():
 
     print "Apply blocking 1"
     duplicates_count = split_into_blocks(select_cursor, edit_cursor,
-                                         'SELECT * FROM work WHERE LOWER(title) LIKE %s',
+                                         'SELECT COUNT(*) FROM work WHERE LOWER(title) LIKE %s',
+                                         'SELECT * FROM work WHERE LOWER(title) LIKE %s ORDER BY title',
                                          ['the %'], 4)
 
     print "Apply blocking 2"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
-                                          'SELECT * FROM work WHERE LOWER(title) LIKE %s',
-                                          ['sonate%'], 4)
+                                          'SELECT COUNT(*) FROM work WHERE LOWER(title) LIKE %s',
+                                          'SELECT * FROM work WHERE LOWER(title) LIKE %s ORDER BY title',
+                                          ['sonate%'], 6)
 
     print "Apply blocking 3"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
-                                          'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s',
-                                          ['the %', 'sonate%'], 4)
+                                          'SELECT COUNT(*) FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s',
+                                          'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s ORDER BY title',
+                                          ['the %', 'sonate%'])
 
     # Commit all database changes
-    # connection.commit()
+    connection.commit()
 
     print('%d duplicates found.' % duplicates_count)
 
 
-def split_into_blocks(select_cursor, edit_cursor, query, arguments=None, title_offset=0):
+def split_into_blocks(select_cursor, edit_cursor, count_query, rows_query, arguments=None, title_offset=0):
     if arguments is None:
         arguments = []
 
     # Count rows in work table for calculating the progress
     i = 0
     last_process = -1
-    count_query = query.replace('*', 'COUNT(*)')
     select_cursor.execute(count_query, arguments)
     work_count = select_cursor.fetchone()[0]
 
@@ -56,20 +58,20 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None, title_o
     current_first_char = None
     duplicates_count = 0
 
-    select_cursor.execute(query, arguments)
+    select_cursor.execute(rows_query, arguments)
     while i < work_count:
         row = select_cursor.fetchone()
 
         # Check, if last row has been read
         if row is None:
-            return
+            return duplicates_count
 
         title = row[1][title_offset:]
         if title:
-            first_title_char = title[0].lower()
+            first_title_char = title[:2].lower()
             if current_first_char != first_title_char:
                 # First title character changed, so find duplicates in buckets
-                if row_bucket:
+                if row_bucket and len(row_bucket) > 1:
                     duplicates_count += find_duplicates(edit_cursor, row_bucket)
                     row_bucket = []
 

@@ -1,6 +1,5 @@
 from __future__ import division
 import math
-from os import dup
 import psycopg2
 
 connection = psycopg2.connect(host='localhost',
