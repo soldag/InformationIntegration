@@ -110,16 +110,14 @@ def year_sim(year1, year2):
     if any([x is None for x in [year1, year2]]):
         return 1
 
-    sim = levenshtein(year1, year2)
+    sim = year1 - year2
 
     if sim == 0:
         return 1
-    elif sim == 1:
+    elif -3 < sim < 3:
         return 0.75
     else:
         return 0
-
-
 
 
 def normalized_levenshtein(string1, string2):
