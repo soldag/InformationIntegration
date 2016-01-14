@@ -173,7 +173,7 @@ arraysize = 1000
 cursor.execute('SELECT COUNT(id) FROM movie')
 rows = cursor.fetchone()[0]
 
-cursor.execute('SELECT id, imdb_id, title, original_title, description, region, genre, censor_rating, poster_path, homepage, status, tagline, studios, process_used_to_produce, awards, comment FROM movie')
+cursor.execute('SELECT id, imdb_id, title, original_title, description, region, genre, censor_rating, poster_path, homepage, status, tagline, studios, process_used_to_produce, comment FROM movie')
 
 i = 0
 while (i <= rows and arraysize != 0) :
@@ -182,8 +182,8 @@ while (i <= rows and arraysize != 0) :
 		id = row[0]
 		new_a = check_attributes(row)
 
-		cursor2.execute('UPDATE movie SET imdb_id=%s, title=%s, original_title=%s, description=%s, region=%s, genre=%s, censor_rating=%s, poster_path=%s, homepage=%s, status=%s, tagline=%s, studios=%s, process_used_to_produce=%s, awards=%s, comment=%s WHERE id=%s',
-                                        [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], new_a[8], new_a[9], new_a[10], new_a[11], new_a[12], new_a[13], new_a[14], new_a[15], id])
+		cursor2.execute('UPDATE movie SET imdb_id=%s, title=%s, original_title=%s, description=%s, region=%s, genre=%s, censor_rating=%s, poster_path=%s, homepage=%s, status=%s, tagline=%s, studios=%s, process_used_to_produce=%s, comment=%s WHERE id=%s',
+                                        [new_a[1], new_a[2], new_a[3], new_a[4], new_a[5], new_a[6], new_a[7], new_a[8], new_a[9], new_a[10], new_a[11], new_a[12], new_a[13], new_a[14], id])
 		i = i + 1
 		if rows - i < arraysize:
 			arraysize = rows - i
