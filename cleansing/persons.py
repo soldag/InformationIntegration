@@ -9,7 +9,7 @@ from Levenshtein.StringMatcher import StringMatcher
 SIMILARITY_THRESHOLD = 0.95
 
 
-def clean_movie():
+def clean_person():
     connection = psycopg2.connect(host='localhost',
                                   port=5432,
                                   user='Rosa',
@@ -33,7 +33,6 @@ def clean_movie():
     duplicates_count += split_into_blocks_stage_name(select_cursor, edit_cursor,
                                           'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM (SELECT * FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = \'f\') AS sub GROUP BY stage',
                                           'f')
-
     print "Apply blocking 4"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT SUBSTR(LOWER(last_name),1,2) AS last, SUBSTR(LOWER(first_name),1,2) AS first, gender FROM person WHERE first_name IS NOT NULL OR last_name IS NOT NULL GROUP BY last, first, gender')
@@ -66,7 +65,7 @@ def split_into_blocks(select_cursor, edit_cursor, query):
     for group in select_cursor.fetchall():
         last_name = group[0]
         first_name = group[1]
-        gender = group[3]
+        gender = group[2]
         if gender is None:
             if last_name is None:
                 select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND first_name LIKE %s AND gender IS NULL', [first_name+'%'])
@@ -404,4 +403,4 @@ def string_length(string):
 
 
 if __name__ == "__main__":
-    clean_movie()
+    clean_person()
