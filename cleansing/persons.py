@@ -21,33 +21,34 @@ def clean_person():
 
     print "Apply blocking 1"
     duplicates_count = split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                         'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM (SELECT * FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender IS NULL) AS sub GROUP BY stage',
-                                        None)
+                                                    'SELECT SUBSTR(LOWER(stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender IS NULL GROUP BY stage')
 
     print "Apply blocking 2"
     duplicates_count += split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                          'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM (SELECT * FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = \'m\') AS sub GROUP BY stage',
-                                          'm')
+                                                     'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
+                                                     ['m'])
 
     print "Apply blocking 3"
     duplicates_count += split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                          'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM (SELECT * FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = \'f\') AS sub GROUP BY stage',
-                                          'f')
+                                                     'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
+                                                     ['f'])
     print "Apply blocking 4"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT SUBSTR(LOWER(last_name),1,2) AS last, SUBSTR(LOWER(first_name),1,2) AS first, gender FROM person WHERE first_name IS NOT NULL OR last_name IS NOT NULL GROUP BY last, first, gender')
 
     # Commit all database changes
-    # connection.commit()
+    connection.commit()
 
     print('%d duplicates found.' % duplicates_count)
 
 
-def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender):
-
+def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender=None):
+    i = 0
+    last_process = 0
     duplicates_count = 0
-    select_cursor.execute(query)
-    for group in select_cursor.fetchall():
+    select_cursor.execute(query, gender)
+    groups = select_cursor.fetchall()
+    for group in groups:
         if gender is None:
             select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender IS NULL', [group[0]+'%'])
         else:
@@ -55,14 +56,23 @@ def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender):
         row_bucket = select_cursor.fetchall()
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
+        # Calculate and print progress
+        i += 1
+        process = i / len(groups) * 100
+        if last_process == -1 or process - last_process >= 1:
+            print "%d%% completed" % int(math.floor(process))
+            last_process = process
+
     return duplicates_count
 
 
 def split_into_blocks(select_cursor, edit_cursor, query):
-
+    i = 0
+    last_process = 0
     duplicates_count = 0
     select_cursor.execute(query)
-    for group in select_cursor.fetchall():
+    groups = select_cursor.fetchall()
+    for group in groups:
         last_name = group[0]
         first_name = group[1]
         gender = group[2]
@@ -81,6 +91,13 @@ def split_into_blocks(select_cursor, edit_cursor, query):
             select_cursor.execute('SELECT * FROM person WHERE last_name LIKE %s AND first_name LIKE %s AND gender LIKE %s', [last_name+'%', first_name+'%', gender])
         row_bucket = select_cursor.fetchall()
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
+
+        # Calculate and print progress
+        i += 1
+        process = i / len(groups) * 100
+        if last_process == -1 or process - last_process >= 1:
+            print "%d%% completed" % int(math.floor(process))
+            last_process = process
 
     return duplicates_count
 

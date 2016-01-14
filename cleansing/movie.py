@@ -35,7 +35,7 @@ def clean_movie():
                                           ['the %', 'die %'])
 
     # Commit all database changes
-    # connection.commit()
+    connection.commit()
 
     print('%d duplicates found.' % duplicates_count)
 
@@ -44,9 +44,12 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None):
     if arguments is None:
         arguments = []
 
+    i = 0
+    last_process = 0
     duplicates_count = 0
     select_cursor.execute(query, arguments)
-    for group in select_cursor.fetchall():
+    groups = select_cursor.fetchall()
+    for group in groups:
         if group[0] is None:
             select_cursor.execute('SELECT * FROM movie WHERE title IS NULL AND original_title LIKE %s', [group[1]+'%'])
         elif group[1] is None:
@@ -55,6 +58,13 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None):
             select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND original_title LIKE %s', [group[0]+'%', group[1]+'%'])
         row_bucket = select_cursor.fetchall()
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
+
+        # Calculate and print progress
+        i += 1
+        process = i / len(groups) * 100
+        if last_process == -1 or process - last_process >= 1:
+            print "%d%% completed" % int(math.floor(process))
+            last_process = process
 
     return duplicates_count
 
