@@ -4,7 +4,8 @@ import math
 import operator
 import psycopg2
 from Levenshtein.StringMatcher import StringMatcher
-
+from psycopg2._psycopg import cursor
+from unidecode import unidecode
 
 SIMILARITY_THRESHOLD = 0.95
 
@@ -33,7 +34,7 @@ def clean_works():
                                           ['sonate%'], 6)
 
     print "Apply blocking 3"
-    duplicates_count += split_into_blocks(select_cursor, edit_cursor,
+    duplicates_count = split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT COUNT(*) FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s',
                                           'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s ORDER BY title',
                                           ['the %', 'sonate%'])
@@ -64,18 +65,20 @@ def split_into_blocks(select_cursor, edit_cursor, count_query, rows_query, argum
 
         # Check, if last row has been read
         if row is None:
-            return duplicates_count
+            break
 
-        title = row[1][title_offset:]
+        title = unidecode(row[1][title_offset:])
         if title:
             first_title_char = title[:2].lower()
             if current_first_char != first_title_char:
                 # First title character changed, so find duplicates in buckets
                 if row_bucket and len(row_bucket) > 1:
+                    print "Find duplicates...(%d)" % len(row_bucket)
                     duplicates_count += find_duplicates(edit_cursor, row_bucket)
                     row_bucket = []
 
                 current_first_char = first_title_char
+                print "Next characters: " + current_first_char
 
             row_bucket.append(row)
 
