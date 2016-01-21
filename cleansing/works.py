@@ -34,7 +34,7 @@ def clean_works():
                                           ['sonate%'], 6)
 
     print "Apply blocking 3"
-    duplicates_count = split_into_blocks(select_cursor, edit_cursor,
+    duplicates_count += split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT COUNT(*) FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s',
                                           'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s ORDER BY title',
                                           ['the %', 'sonate%'])
