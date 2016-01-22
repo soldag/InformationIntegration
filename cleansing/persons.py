@@ -13,32 +13,46 @@ def clean_person():
     connection = psycopg2.connect(host='localhost',
                                   port=5432,
                                   user='Rosa',
-                                  database='infint_integrated')
+                                  database='infint_integrated_clean')
 
     # Get database cursors
     select_cursor = connection.cursor()
     edit_cursor = connection.cursor()
 
+    """
     print "Apply blocking 1"
     duplicates_count = split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                                    'SELECT SUBSTR(LOWER(stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender IS NULL GROUP BY stage')
+                                                    'SELECT SUBSTR(LOWER(stage_name),1,3) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender IS NULL GROUP BY stage')
+    print "start commit blocking 1"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
+
 
     print "Apply blocking 2"
     duplicates_count += split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                                     'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
-                                                     ['m'])
+                                                     'SELECT SUBSTR(LOWER(stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
+                                                     'm')
+
+    print "start commit blocking 2"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
 
     print "Apply blocking 3"
     duplicates_count += split_into_blocks_stage_name(select_cursor, edit_cursor,
-                                                     'SELECT SUBSTR(LOWER(sub.stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
-                                                     ['f'])
-    print "Apply blocking 4"
-    duplicates_count += split_into_blocks(select_cursor, edit_cursor,
-                                          'SELECT SUBSTR(LOWER(last_name),1,2) AS last, SUBSTR(LOWER(first_name),1,2) AS first, gender FROM person WHERE first_name IS NOT NULL OR last_name IS NOT NULL GROUP BY last, first, gender')
+                                                     'SELECT SUBSTR(LOWER(stage_name),1,1) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender = %s GROUP BY stage',
+                                                     'f')
 
-    # Commit all database changes
+    print "start commit blocking 3"
     connection.commit()
+    print('%d duplicates found.' % duplicates_count)
+    """
 
+    print "Apply blocking 4"
+    duplicates_count = split_into_blocks(select_cursor, edit_cursor,
+                                          'SELECT SUBSTR(LOWER(last_name),1,3) AS last, SUBSTR(LOWER(first_name),1,3) AS first, gender FROM person WHERE first_name IS NOT NULL OR last_name IS NOT NULL GROUP BY last, first, gender')
+            
+    print "start commit blocking 4"
+    connection.commit()
     print('%d duplicates found.' % duplicates_count)
 
 
@@ -46,13 +60,23 @@ def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender=None)
     i = 0
     last_process = 0
     duplicates_count = 0
-    select_cursor.execute(query, gender)
+    select_cursor.execute(query, [gender])
     groups = select_cursor.fetchall()
     for group in groups:
+        stage_name = group[0]
+        if stage_name is not None:
+            stage_name = stage_name.replace('_','\_')
+        print stage_name
         if gender is None:
-            select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender IS NULL', [group[0]+'%'])
+            if stage_name is None:
+                select_cursor.execute('SELECT * FROM person WHERE stage_name IS NULL AND first_name IS NULL AND last_name IS NULL AND gender IS NULL')
+            else:
+                select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender IS NULL', [stage_name+'%'])
         else:
-            select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender = %s', [group[0]+'%', gender])
+            if stage_name is None:
+                select_cursor.execute('SELECT * FROM person WHERE stage_name IS NULL AND first_name IS NULL AND last_name IS NULL AND gender = %s', [gender])
+            else:
+                select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender = %s', [stage_name+'%', gender])
         row_bucket = select_cursor.fetchall()
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
@@ -74,8 +98,17 @@ def split_into_blocks(select_cursor, edit_cursor, query):
     groups = select_cursor.fetchall()
     for group in groups:
         last_name = group[0]
+        if last_name is not None:
+            last_name = last_name.replace('_','\_')
+            last_name = last_name.replace('%','\%')
         first_name = group[1]
+        if first_name is not None:
+            first_name = first_name.replace('_','\_')
+            first_name = first_name.replace('%','\%')
         gender = group[2]
+        print last_name
+        print first_name
+        print gender
         if gender is None:
             if last_name is None:
                 select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND first_name LIKE %s AND gender IS NULL', [first_name+'%'])
@@ -264,11 +297,11 @@ def merge_duplicates(cursor, duplicate_rows):
         cursor.execute('SELECT artist_credit_id FROM artist_credit_name WHERE person_id=%s', [dup_person_id])
         for row in cursor.fetchall():
             artist_credit_id = row[0]
-            cursor.execute('SELECT * FROM artist_credit_name WHERE person_id=%s AND artist_credit_id=%s AND job_id=%s AND role=%s', [person_id, artist_credit_id])
+            cursor.execute('SELECT * FROM artist_credit_name WHERE person_id=%s AND artist_credit_id=%s', [person_id, artist_credit_id])
             if cursor.fetchone():
-                cursor.execute('DELETE FROM artist_credit_name WHERE person_id=%s AND artist_credit_id=%s AND job_id=%s AND role=%s', [dup_person_id, artist_credit_id])
+                cursor.execute('DELETE FROM artist_credit_name WHERE person_id=%s AND artist_credit_id=%s', [dup_person_id, artist_credit_id])
             else:
-                cursor.execute('UPDATE artist_credit_name SET person_id=%s WHERE person_id=%s AND artist_credit_id=%s AND job_id=%s AND role=%s',
+                cursor.execute('UPDATE artist_credit_name SET person_id=%s WHERE person_id=%s AND artist_credit_id=%s',
                                [person_id, dup_person_id, artist_credit_id])
 
     cursor.execute('DELETE FROM person WHERE id IN %s', [dup_person_ids])
@@ -289,7 +322,7 @@ def get_longest_string(duplicate_rows, column_index, taken_values_count):
         index = get_most_used_row(candidate_indexes, taken_values_count)
 
     taken_values_count[index] += 1
-    return strings[index], index
+    return strings[index]
 
 
 def get_largest_number(duplicate_rows, column_index, taken_values_count):

@@ -12,8 +12,8 @@ SIMILARITY_THRESHOLD = 0.95
 def clean_movie():
     connection = psycopg2.connect(host='localhost',
                                   port=5432,
-                                  user='Henni',
-                                  database='integrated_table')
+                                  user='Rosa',
+                                  database='infint_integrated_clean')
 
     # Get database cursors
     select_cursor = connection.cursor()
@@ -21,22 +21,39 @@ def clean_movie():
 
     print "Apply blocking 1"
     duplicates_count = split_into_blocks(select_cursor, edit_cursor,
-                                         'SELECT SUBSTR(LOWER(title), 1, 8) AS title_1, SUBSTR(LOWER(original_title), 1, 4) AS original_title_1 FROM movie WHERE LOWER(title) LIKE %s GROUP BY title_1, original_title_1',
+                                         'SELECT SUBSTR(LOWER(title), 1, 8) AS title_1, release_year FROM movie WHERE LOWER(title) LIKE %s GROUP BY title_1, release_year',
                                          ['the %'])
 
+    print "start commit blocking 1"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
+    
     print "Apply blocking 2"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
-                                          'SELECT SUBSTR(LOWER(title), 1, 8) AS title_1, SUBSTR(LOWER(original_title), 1, 4) AS original_title_1 FROM movie WHERE LOWER(title) LIKE %s GROUP BY title_1, original_title_1',
+                                          'SELECT SUBSTR(LOWER(title), 1, 8) AS title_1, release_year FROM movie WHERE LOWER(title) LIKE %s GROUP BY title_1, release_year',
                                           ['die %'])
+
+    print "start commit blocking 2"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
 
     print "Apply blocking 3"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
-                                          'SELECT SUBSTR(LOWER(title), 1, 8) AS title_1, SUBSTR(LOWER(original_title), 1, 4) AS original_title_1 FROM movie WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s GROUP BY title_1, original_title_1',
-                                          ['the %', 'die %'])
+                                          'SELECT SUBSTR(LOWER(title), 1, 5) AS title_1, release_year FROM movie WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s GROUP BY title_1, release_year',
+                                          ['the %', 'die %', 'ohayou tokushima%'])
 
-    # Commit all database changes
+    print "start commit blocking 3"
     connection.commit()
+    print('%d duplicates found.' % duplicates_count)
 
+    print "Apply blocking 4"
+    select_cursor.execute('SELECT COUNT(*) FROM movie WHERE LOWER(title) LIKE %s', ['ohayou tokushima%'])
+    duplicates_count += select_cursor.fetchone()[0]
+    select_cursor.execute('SELECT * FROM movie WHERE LOWER(title) LIKE %s', ['ohayou tokushima%'])
+    merge_duplicates_oha(edit_cursor, select_cursor.fetchall())
+
+    print "start commit blocking 4"
+    connection.commit()
     print('%d duplicates found.' % duplicates_count)
 
 
@@ -50,12 +67,20 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None):
     select_cursor.execute(query, arguments)
     groups = select_cursor.fetchall()
     for group in groups:
-        if group[0] is None:
-            select_cursor.execute('SELECT * FROM movie WHERE title IS NULL AND original_title LIKE %s', [group[1]+'%'])
-        elif group[1] is None:
-            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND original_title IS NULL', [group[0]+'%'])
+        title = group[0]
+        if title is not None:
+            title = group[0].replace('_','\_')
+            title = group[0].replace('%','\%')
+        release_year = group[1]
+        if release_year is not None:
+            release_year = group[1].replace('_','\_')
+            release_year = group[1].replace('%','\%')
+        if title is None:
+            select_cursor.execute('SELECT * FROM movie WHERE title IS NULL AND release_year = %s', [release_year])
+        elif release_year is None:
+            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND release_year IS NULL', [title+'%'])
         else:
-            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND original_title LIKE %s', [group[0]+'%', group[1]+'%'])
+            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND release_year = %s', [title+'%', release_year])
         row_bucket = select_cursor.fetchall()
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
@@ -156,6 +181,15 @@ def max_length(string1, string2):
 
     return max(len(string1), len(string2))
 
+def merge_duplicates_oha(cursor, duplicate_rows):
+    movie_id = 'im_1377845'
+    year = 1971
+
+    cursor.execute('UPDATE movie SET release_year = %s WHERE id = %s', [year, movie_id])
+
+    dup_movie_ids = tuple([id for id in [row[0] for row in duplicate_rows] if id != movie_id])
+    cursor.execute('DELETE FROM movie WHERE id IN %s', [dup_movie_ids])
+
 
 def merge_duplicates(cursor, duplicate_rows):
     taken_values_count = dict(enumerate([0]*len(duplicate_rows)))
@@ -165,7 +199,7 @@ def merge_duplicates(cursor, duplicate_rows):
     title, title_index = get_longest_string(duplicate_rows, 2, taken_values_count)
     imdb_id = duplicate_rows[awesome_function(duplicate_rows, 1, taken_values_count)][1]
     original_title = duplicate_rows[title_index][3]
-    description = get_longest_string(duplicate_rows, 4, taken_values_count)
+    description, description_index = get_longest_string(duplicate_rows, 4, taken_values_count)
     trailer_id = duplicate_rows[awesome_function(duplicate_rows, 5, taken_values_count)][5]
     region = duplicate_rows[awesome_function(duplicate_rows, 6, taken_values_count)][6]
     censor_rating = get_censor_rating(duplicate_rows, 7, taken_values_count)
@@ -173,14 +207,14 @@ def merge_duplicates(cursor, duplicate_rows):
     runtime = duplicate_rows[awesome_function(duplicate_rows, 11, taken_values_count)][11]
     budget = duplicate_rows[awesome_function(duplicate_rows, 12, taken_values_count)][12]
     revenue = duplicate_rows[awesome_function(duplicate_rows, 13, taken_values_count)][13]
-    poster_path = get_longest_string(duplicate_rows, 14, taken_values_count)
+    poster_path, poster_path_index = get_longest_string(duplicate_rows, 14, taken_values_count)
     homepage = duplicate_rows[awesome_function(duplicate_rows, 15, taken_values_count)][15]
     popularity = get_largest_number(duplicate_rows, 16, taken_values_count)
     status = get_status(duplicate_rows, 17, taken_values_count)
-    tagline = get_longest_string(duplicate_rows, 18, taken_values_count)
+    tagline, tagline_index = get_longest_string(duplicate_rows, 18, taken_values_count)
     video = get_video(duplicate_rows, 19, taken_values_count)
     rating_id = get_rating_id(duplicate_rows, 20, cursor)
-    parent_id = get_longest_string(duplicate_rows, 21, taken_values_count)
+    parent_id, parent_id_index = get_longest_string(duplicate_rows, 21, taken_values_count)
     studios = duplicate_rows[awesome_function(duplicate_rows, 22, taken_values_count)][22]
     process_used_to_produce = concat_attributes(duplicate_rows, 23)
     comment = concat_attributes(duplicate_rows, 24)
@@ -343,7 +377,7 @@ def get_video(duplicate_rows, video_column_index, taken_values_count):
 
 
 def concat_attributes(duplicate_rows, column_index):
-    values = [row[column_index] for row in duplicate_rows]
+    values = [row[column_index] for row in duplicate_rows if row[column_index] is not None]
     return '; '.join(values)
 
 
