@@ -4,7 +4,6 @@ import math
 import operator
 import psycopg2
 from Levenshtein.StringMatcher import StringMatcher
-from psycopg2._psycopg import cursor
 from unidecode import unidecode
 
 SIMILARITY_THRESHOLD = 0.95
@@ -96,19 +95,19 @@ def split_into_blocks(select_cursor, edit_cursor, count_query, rows_query, argum
 
 
 def find_duplicates(cursor, rows):
-    checked_rows = []
+    checked_row_ids = []
     duplicates_count = 0
     for i in range(0, len(rows)):
         row1 = rows[i]
-        if row1:
+        if row1 and row1[0] not in checked_row_ids:
             duplicate_rows = [row1]
             for j in range(i + 1, len(rows)):
                 row2 = rows[j]
-                if row2 and row2[0] not in checked_rows:
+                if row2 and row2[0] not in checked_row_ids:
                     similarity = calculate_similarity(row1, row2)
                     if similarity >= SIMILARITY_THRESHOLD:
                         duplicate_rows.append(row2)
-                    checked_rows.append(row2[0])
+                        checked_row_ids.extend([row1[0], row2[0]])
             if len(duplicate_rows) > 1:
                 merge_duplicates(cursor, duplicate_rows)
                 duplicates_count += len(duplicate_rows)
