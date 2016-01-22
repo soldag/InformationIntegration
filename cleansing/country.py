@@ -20,49 +20,49 @@ for row in cursor.fetchall():
         if '\\' == name[0]:
             name = name[1:3]
             name = name.upper()
-            try:
-                country = pycountry.countries.get(alpha2 = name)
-                name = country.name
-            except:
-                if name == 'AN':
-                    name = 'Andorra'
-                elif name == 'BU':
-                    name = 'Bulgaria'
-                elif name == 'CT':
-                    name = 'Central African Republic'
-                elif name == 'DA':
-                    name = 'Denmark'
-                elif name == 'DU':
-                    name = 'Holland'
-                elif name == 'IC':
-                    name = 'Iceland'
-                elif name == 'JA':
-                    name = 'Japan'
-                elif name == 'KO':
-                    name = 'South Korea'
-                elif name == 'OS':
-                    name = 'Austria'
-                elif name == 'PO':
-                    name = 'Portugal'
-                elif name == 'RM':
-                    name = 'Romania'
-                elif name == 'SP':
-                    name = 'Spain'
-                elif name == 'SW':
-                    name = 'Sweden'
-                elif name == 'TA':
-                    name = 'Tajikistan'
-                elif name == 'TU':
-                    name = 'Turkey'
-                elif name == 'UN':
-                    name = 'Ukraine'
-                elif name == 'WA':
-                    name = 'Namibia'
-                elif name == 'WI':
-                    name = 'Western Sahara'
-                elif name == 'YU':
-                    name = 'Yugoslavia'
-            cursor.execute('UPDATE country SET name=%s WHERE id = %s', [name,country_id])
+        try:
+            country = pycountry.countries.get(alpha2=name)
+            name = country.name
+        except:
+            if name == 'AN':
+                name = 'Andorra'
+            elif name == 'BU':
+                name = 'Bulgaria'
+            elif name == 'CT':
+                name = 'Central African Republic'
+            elif name == 'DA':
+                name = 'Denmark'
+            elif name == 'DU':
+                name = 'Holland'
+            elif name == 'IC':
+                name = 'Iceland'
+            elif name == 'JA':
+                name = 'Japan'
+            elif name == 'KO':
+                name = 'South Korea'
+            elif name == 'OS':
+                name = 'Austria'
+            elif name == 'PO':
+                name = 'Portugal'
+            elif name == 'RM':
+                name = 'Romania'
+            elif name == 'SP':
+                name = 'Spain'
+            elif name == 'SW':
+                name = 'Sweden'
+            elif name == 'TA':
+                name = 'Tajikistan'
+            elif name == 'TU':
+                name = 'Turkey'
+            elif name == 'UN':
+                name = 'Ukraine'
+            elif name == 'WA':
+                name = 'Namibia'
+            elif name == 'WI':
+                name = 'Western Sahara'
+            elif name == 'YU':
+                name = 'Yugoslavia'
+        cursor.execute('UPDATE country SET name=%s WHERE id = %s', [name,country_id])
 connection.commit()
 
 #duplicate detection
