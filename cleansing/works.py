@@ -12,9 +12,9 @@ SIMILARITY_THRESHOLD = 0.95
 def clean_works():
     connection = psycopg2.connect(host='localhost',
                                   port=5432,
-                                  user='soldag',
+                                  user='Rosa',
                                   password='',
-                                  database='integrated')
+                                  database='infint_integrated_clean')
 
     # Get database cursors
     select_cursor = connection.cursor()
@@ -26,11 +26,19 @@ def clean_works():
                                          'SELECT * FROM work WHERE LOWER(title) LIKE %s ORDER BY title',
                                          ['the %'], 4)
 
+    print "start commit blocking 1"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
+
     print "Apply blocking 2"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT COUNT(*) FROM work WHERE LOWER(title) LIKE %s',
                                           'SELECT * FROM work WHERE LOWER(title) LIKE %s ORDER BY title',
                                           ['sonate%'], 6)
+
+    print "start commit blocking 2"
+    connection.commit()
+    print('%d duplicates found.' % duplicates_count)
 
     print "Apply blocking 3"
     duplicates_count += split_into_blocks(select_cursor, edit_cursor,
@@ -38,9 +46,8 @@ def clean_works():
                                           'SELECT * FROM work WHERE LOWER(title) NOT LIKE %s AND LOWER(title) NOT LIKE %s ORDER BY title',
                                           ['the %', 'sonate%'])
 
-    # Commit all database changes
+    print "start commit blocking 3"
     connection.commit()
-
     print('%d duplicates found.' % duplicates_count)
 
 

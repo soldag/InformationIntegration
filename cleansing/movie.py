@@ -69,12 +69,9 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None):
     for group in groups:
         title = group[0]
         if title is not None:
-            title = group[0].replace('_','\_')
-            title = group[0].replace('%','\%')
+            title = title.replace('_','\_')
+            title = title.replace('%','\%')
         release_year = group[1]
-        if release_year is not None:
-            release_year = group[1].replace('_','\_')
-            release_year = group[1].replace('%','\%')
         if title is None:
             select_cursor.execute('SELECT * FROM movie WHERE title IS NULL AND release_year = %s', [release_year])
         elif release_year is None:
@@ -330,11 +327,11 @@ def get_largest_number(duplicate_rows, column_index, taken_values_count):
 def get_censor_rating(duplicate_rows, censor_rating_column_index, taken_values_count):
     ratings = [row[censor_rating_column_index] for row in duplicate_rows]
     if 'A' in ratings:
-        index = ratings.indexOf('A')
+        index = ratings.index('A')
     elif 'U/A' in ratings:
-        index = ratings.indexOf('U/A')
+        index = ratings.index('U/A')
     elif 'U' in ratings:
-        index = ratings.indexOf('U')
+        index = ratings.index('U')
     else:
         index = 0
 
@@ -345,17 +342,17 @@ def get_censor_rating(duplicate_rows, censor_rating_column_index, taken_values_c
 def get_status(duplicate_rows, status_column_index, taken_values_count):
     status = [row[status_column_index] for row in duplicate_rows]
     if 'Canceled' in status:
-        index = status.indexOf('Canceled')
+        index = status.index('Canceled')
     elif 'Released' in status:
-        index = status.indexOf('Released')
+        index = status.index('Released')
     elif 'Post Production' in status:
-        index = status.indexOf('Post Production')
+        index = status.index('Post Production')
     elif 'In Production' in status:
-        index = status.indexOf('In Production')
+        index = status.index('In Production')
     elif 'Planned' in status:
-        index = status.indexOf('Planned')
+        index = status.index('Planned')
     elif 'Rumored' in status:
-        index = status.indexOf('Rumored')
+        index = status.index('Rumored')
     else:
         index = 0
 
@@ -366,9 +363,9 @@ def get_status(duplicate_rows, status_column_index, taken_values_count):
 def get_video(duplicate_rows, video_column_index, taken_values_count):
     videos = [row[video_column_index] for row in duplicate_rows]
     if True in videos:
-        index = videos.indexOf(True)
+        index = videos.index(True)
     elif False in videos:
-        index = videos.indexOf(False)
+        index = videos.index(False)
     else:
         index = 0
 

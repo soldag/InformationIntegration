@@ -19,7 +19,6 @@ def clean_person():
     select_cursor = connection.cursor()
     edit_cursor = connection.cursor()
 
-    """
     print "Apply blocking 1"
     duplicates_count = split_into_blocks_stage_name(select_cursor, edit_cursor,
                                                     'SELECT SUBSTR(LOWER(stage_name),1,3) AS stage FROM person WHERE first_name IS NULL AND last_name IS NULL AND gender IS NULL GROUP BY stage')
@@ -45,8 +44,7 @@ def clean_person():
     print "start commit blocking 3"
     connection.commit()
     print('%d duplicates found.' % duplicates_count)
-    """
-
+    
     print "Apply blocking 4"
     duplicates_count = split_into_blocks(select_cursor, edit_cursor,
                                           'SELECT SUBSTR(LOWER(last_name),1,3) AS last, SUBSTR(LOWER(first_name),1,3) AS first, gender FROM person WHERE first_name IS NOT NULL OR last_name IS NOT NULL GROUP BY last, first, gender')
