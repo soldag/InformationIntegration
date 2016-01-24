@@ -62,23 +62,25 @@ def split_into_blocks(select_cursor, edit_cursor, query, arguments=None):
         arguments = []
 
     i = 0
-    last_process = 0
+    last_process = -1
     duplicates_count = 0
     select_cursor.execute(query, arguments)
     groups = select_cursor.fetchall()
     for group in groups:
         title = group[0]
         if title is not None:
-            title = title.replace('_','\_')
-            title = title.replace('%','\%')
+            title = title.replace('_', '\_')
+            title = title.replace('%', '\%')
         release_year = group[1]
+        print "Group: %s, %s" % (str(title), str(release_year))
         if title is None:
             select_cursor.execute('SELECT * FROM movie WHERE title IS NULL AND release_year = %s', [release_year])
         elif release_year is None:
-            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND release_year IS NULL', [title+'%'])
+            select_cursor.execute('SELECT * FROM movie WHERE LOWER(title) LIKE %s AND release_year IS NULL', [title+'%'])
         else:
-            select_cursor.execute('SELECT * FROM movie WHERE title LIKE %s AND release_year = %s', [title+'%', release_year])
+            select_cursor.execute('SELECT * FROM movie WHERE LOWER(title) LIKE %s AND release_year = %s', [title+'%', release_year])
         row_bucket = select_cursor.fetchall()
+        print "Find duplicates...(%s)" % len(row_bucket)
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
         # Calculate and print progress

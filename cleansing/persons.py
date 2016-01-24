@@ -56,26 +56,28 @@ def clean_person():
 
 def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender=None):
     i = 0
-    last_process = 0
+    last_process = -1
     duplicates_count = 0
     select_cursor.execute(query, [gender])
     groups = select_cursor.fetchall()
     for group in groups:
         stage_name = group[0]
         if stage_name is not None:
-            stage_name = stage_name.replace('_','\_')
-        print stage_name
+            stage_name = stage_name.replace('_', '\_')
+            stage_name = stage_name.replace('%', '\%')
+        print "Group: %s, %s" % (str(stage_name), str(gender))
         if gender is None:
             if stage_name is None:
                 select_cursor.execute('SELECT * FROM person WHERE stage_name IS NULL AND first_name IS NULL AND last_name IS NULL AND gender IS NULL')
             else:
-                select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender IS NULL', [stage_name+'%'])
+                select_cursor.execute('SELECT * FROM person WHERE LOWER(stage_name) LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender IS NULL', [stage_name+'%'])
         else:
             if stage_name is None:
                 select_cursor.execute('SELECT * FROM person WHERE stage_name IS NULL AND first_name IS NULL AND last_name IS NULL AND gender = %s', [gender])
             else:
-                select_cursor.execute('SELECT * FROM person WHERE stage_name LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender = %s', [stage_name+'%', gender])
+                select_cursor.execute('SELECT * FROM person WHERE LOWER(stage_name) LIKE %s AND first_name IS NULL AND last_name IS NULL AND gender = %s', [stage_name+'%', gender])
         row_bucket = select_cursor.fetchall()
+        print "Find duplicates...(%s)" % len(row_bucket)
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
         # Calculate and print progress
@@ -90,37 +92,36 @@ def split_into_blocks_stage_name(select_cursor, edit_cursor, query, gender=None)
 
 def split_into_blocks(select_cursor, edit_cursor, query):
     i = 0
-    last_process = 0
+    last_process = -1
     duplicates_count = 0
     select_cursor.execute(query)
     groups = select_cursor.fetchall()
     for group in groups:
         last_name = group[0]
         if last_name is not None:
-            last_name = last_name.replace('_','\_')
+            last_name = last_name.replace('_',  '\_')
             last_name = last_name.replace('%','\%')
         first_name = group[1]
         if first_name is not None:
-            first_name = first_name.replace('_','\_')
-            first_name = first_name.replace('%','\%')
+            first_name = first_name.replace('_', '\_')
+            first_name = first_name.replace('%', '\%')
         gender = group[2]
-        print last_name
-        print first_name
-        print gender
+        print "Group: %s, %s, %s" % (str(first_name), str(last_name), str(gender))
         if gender is None:
             if last_name is None:
-                select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND first_name LIKE %s AND gender IS NULL', [first_name+'%'])
+                select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND LOWER(first_name) LIKE %s AND gender IS NULL', [first_name+'%'])
             elif first_name is None:
-                select_cursor.execute('SELECT * FROM person WHERE last_name LIKE %s AND first_name IS NULL AND gender IS NULL', [last_name+'%'])
+                select_cursor.execute('SELECT * FROM person WHERE LOWER(last_name) LIKE %s AND first_name IS NULL AND gender IS NULL', [last_name+'%'])
             else:
-                select_cursor.execute('SELECT * FROM person WHERE last_name LIKE %s AND first_name LIKE %s AND gender IS NULL', [last_name+'%', first_name+'%'])
+                select_cursor.execute('SELECT * FROM person WHERE LOWER(last_name) LIKE %s AND LOWER(first_name) LIKE %s AND gender IS NULL', [last_name+'%', first_name+'%'])
         elif last_name is None:
-            select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND first_name LIKE %s AND gender LIKE %s', [first_name+'%', gender])
+            select_cursor.execute('SELECT * FROM person WHERE last_name IS NULL AND LOWER(first_name) LIKE %s AND gender = %s', [first_name+'%', gender])
         elif first_name is None:
-            select_cursor.execute('SELECT * FROM person WHERE last_name LIKE %s AND first_name IS NULL AND gender LIKE %s', [last_name+'%', gender])
+            select_cursor.execute('SELECT * FROM person WHERE LOWER(last_name) LIKE %s AND first_name IS NULL AND gender = %s', [last_name+'%', gender])
         else:
-            select_cursor.execute('SELECT * FROM person WHERE last_name LIKE %s AND first_name LIKE %s AND gender LIKE %s', [last_name+'%', first_name+'%', gender])
+            select_cursor.execute('SELECT * FROM person WHERE LOWER(last_name) LIKE %s AND LOWER(first_name) LIKE %s AND gender = %s', [last_name+'%', first_name+'%', gender])
         row_bucket = select_cursor.fetchall()
+        print "Find duplicates...(%s)" % len(row_bucket)
         duplicates_count += find_duplicates(edit_cursor, row_bucket)
 
         # Calculate and print progress
