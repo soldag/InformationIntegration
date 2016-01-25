@@ -287,9 +287,9 @@ def merge_duplicates(cursor, duplicate_rows):
         cursor.execute('SELECT genre_id FROM movie_genre WHERE movie_id=%s', [dup_movie_id])
         for row in cursor.fetchall():
             genre_id = row[0]
-            cursor.execute('SELECT * FROM movie_genre WHERE movie_id=%s AND genre_id=%s', [movie_id, location_id])
+            cursor.execute('SELECT * FROM movie_genre WHERE movie_id=%s AND genre_id=%s', [movie_id, genre_id])
             if cursor.fetchone():
-                cursor.execute('DELETE FROM movie_genre WHERE movie_id=%s AND genre_id=%s', [dup_movie_id, location_id])
+                cursor.execute('DELETE FROM movie_genre WHERE movie_id=%s AND genre_id=%s', [dup_movie_id, genre_id])
             else:
                 cursor.execute('UPDATE movie_genre SET movie_id=%s WHERE movie_id=%s AND genre_id=%s',
                                [movie_id, dup_movie_id, genre_id])
@@ -298,7 +298,10 @@ def merge_duplicates(cursor, duplicate_rows):
 
     rating_ids = tuple([movie_id for movie_id in [row[20] for row in duplicate_rows] if movie_id is not None and movie_id != rating_id])
     if rating_ids:
-        cursor.execute('DELETE FROM rating WHERE id IN %s', [rating_ids])
+        for dub_rating_id in rating_ids:
+            cursor.execute('SELECT COUNT(*) FROM movie WHERE rating_id = %s', [dub_rating_id])
+            if cursor.fetchone()[0] == 1:
+                cursor.execute('DELETE FROM rating WHERE id = %s', [dub_rating_id])
 
     trailer_ids = tuple([movie_id for movie_id in [row[5] for row in duplicate_rows] if movie_id is not None and movie_id != trailer_id])
     if trailer_ids:

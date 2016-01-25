@@ -335,9 +335,9 @@ def get_largest_number(duplicate_rows, column_index, taken_values_count):
 def get_goodreads_author(duplicate_rows, goodreads_author_column_index, taken_values_count):
     authors = [row[goodreads_author_column_index] for row in duplicate_rows]
     if 't' in authors:
-        index = authors.indexOf('t')
+        index = authors.index('t')
     elif 'f' in authors:
-        index = authors.indexOf('f')
+        index = authors.index('f')
     else:
         index = 0
 
