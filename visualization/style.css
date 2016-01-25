@@ -1,0 +1,29 @@
+body {
+    background-color: #8cb4fa;
+}
+
+.map {
+    margin: 0;
+    height:100vh;
+}
+
+#controls {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    padding: 25px 25px 20px 20px;
+    background-color: #ffffff;
+    border-top-right-radius: 25px;
+    box-shadow: 3px -3px 4px rgba(0,0,0,0.2), -1px -1px 0px rgba(0,0,0,0.02);
+    z-index: 2;
+}
+
+#controls > .header {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#controls > input {
+    margin-bottom: 5px;
+}
