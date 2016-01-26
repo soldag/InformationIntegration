@@ -7,12 +7,12 @@ $(document).ready(function() {
     createMap(
         $('#revenue-map'),
         revenueData,
-        ['#edf8fb','#bfd3e6','#9ebcda','#8c96c6','#8856a7','#810f7c']
+        ['#9cda9c', '#62c562', '#46bb46', '#379537', '#296f29', '#1b4a1b']
     );
     createMap(
         $('#participants-map'),
         participantData,
-        ['#f2f0f7','#dadaeb','#bcbddc','#9e9ac8','#756bb1','#54278f']
+        ['#f2f0f7', '#dadaeb', '#bcbddc', '#9e9ac8', '#756bb1', '#54278f']
     );
 
     showBudgetMap();
