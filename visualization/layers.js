@@ -7,7 +7,12 @@ $(document).ready(function() {
     createMap(
         $('#revenue-map'),
         revenueData,
-        ['#9cda9c', '#62c562', '#46bb46', '#379537', '#296f29', '#1b4a1b']
+        ['#edf8fb','#bfd3e6','#9ebcda','#8c96c6','#8856a7','#810f7c']
+    );
+    createMap(
+        $('#participants-map'),
+        participantData,
+        ['#f2f0f7','#dadaeb','#bcbddc','#9e9ac8','#756bb1','#54278f']
     );
 
     showBudgetMap();
@@ -32,9 +37,10 @@ function createMap(rootElement, data, colorScale) {
         onRegionTipShow: function(e, element, country_code) {
             var budget = budgetData[country_code];
             var revenue = revenueData[country_code];
+            var participantsCount = participantData[country_code]
 
             var info = '<br/><br/>';
-            if (typeof budget == 'undefined' && typeof revenue == 'undefined') {
+            if (typeof budget == 'undefined' && typeof revenue == 'undefined' && typeof participantsCount == 'undefined') {
                 info += 'No data available.';
             }
             else {
@@ -43,6 +49,9 @@ function createMap(rootElement, data, colorScale) {
                 }
                 if (typeof revenue !== 'undefined') {
                     info += 'Average revenue: ' + $.number(revenue, 2) + '$<br/>';
+                }
+                if (typeof participantsCount !== 'undefined') {
+                    info += 'Average participants: ' + $.number(participantsCount, 2) + '<br/>';
                 }
             }
 
@@ -55,11 +64,19 @@ function createMap(rootElement, data, colorScale) {
 function showBudgetMap() {
     showMap($('#budget-map').show());
     $('#revenue-map').hide();
+    $('#participants-map').hide();
 }
 
 function showRevenueMap() {
     showMap($('#revenue-map'));
     $('#budget-map').hide();
+    $('#participants-map').hide();
+}
+
+function showParticipantsMap() {
+    showMap($('#participants-map'));
+    $('#budget-map').hide();
+    $('#revenue-map').hide();
 }
 
 function showMap($element) {

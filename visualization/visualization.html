@@ -17,6 +17,7 @@
     <body>
         <div id="budget-map" class="map"></div>
         <div id="revenue-map" class="map"></div>
+        <div id="participants-map" class="map"></div>
 
         <div id="controls">
             <span class="header">Series:</span>
@@ -25,7 +26,10 @@
             <label for="radioBudget">Average budget per country</label><br/>
 
             <input type="radio" name="series" id="radioRevenue" onclick="showRevenueMap()" />
-            <label for="radioRevenue">Average revenue per country</label>
+            <label for="radioRevenue">Average revenue per country</label><br/>
+
+            <input type="radio" name="series" id="radioParticipants" onclick="showParticipantsMap()" />
+            <label for="radioRevenue">Average number of participants per country</label>
         </div>
     </body>
 </html>
