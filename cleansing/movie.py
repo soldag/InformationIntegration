@@ -300,7 +300,7 @@ def merge_duplicates(cursor, duplicate_rows):
     if rating_ids:
         for dub_rating_id in rating_ids:
             cursor.execute('SELECT COUNT(*) FROM movie WHERE rating_id = %s', [dub_rating_id])
-            if cursor.fetchone()[0] == 1:
+            if cursor.fetchone()[0] == 0:
                 cursor.execute('DELETE FROM rating WHERE id = %s', [dub_rating_id])
 
     trailer_ids = tuple([movie_id for movie_id in [row[5] for row in duplicate_rows] if movie_id is not None and movie_id != trailer_id])
